@@ -7,6 +7,7 @@ import Footer from './components/Footer'
 import HomePage from './pages/HomePage'
 import LinkWallet from './pages/LinkWallet'
 import AddMember from './pages/AddMember'
+import AboutUs from './pages/AboutUs'
 
 
 
@@ -15,7 +16,7 @@ function App() {
 
   return (
     <>
-     <AddMember/>
+     <AboutUs/>
       
     </>
   )
