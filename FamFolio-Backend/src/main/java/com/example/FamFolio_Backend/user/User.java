@@ -15,6 +15,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -58,8 +59,8 @@ public class User {
     @Column(name = "updated_at", nullable = false)
     private ZonedDateTime updatedAt;
     
-    @OneToMany(mappedBy = "user")
-    private Set<Wallet> wallets = new HashSet<>();
+    @OneToOne(mappedBy = "user")
+    private Wallet wallets;
     
     @OneToMany(mappedBy = "owner")
     private Set<UserRelationship> ownedRelationships = new HashSet<>();
@@ -73,7 +74,11 @@ public class User {
     @OneToMany(mappedBy = "user")
     private Set<Transaction> transactions = new HashSet<>();
 
-    // Default constructor
+    public void setWallets(Wallet wallets) {
+		this.wallets = wallets;
+	}
+
+	// Default constructor
     public User() {
     }
     
@@ -181,14 +186,11 @@ public class User {
         this.updatedAt = updatedAt;
     }
 
-    public Set<Wallet> getWallets() {
+    public Wallet getWallets() {
         return wallets;
     }
 
-    public void setWallets(Set<Wallet> wallets) {
-        this.wallets = wallets;
-    }
-
+   
     public Set<UserRelationship> getOwnedRelationships() {
         return ownedRelationships;
     }
