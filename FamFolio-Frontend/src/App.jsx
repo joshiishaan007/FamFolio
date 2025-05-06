@@ -6,15 +6,16 @@ import Header from './components/Header'
 import Footer from './components/Footer'
 import HomePage from './pages/HomePage'
 import LinkWallet from './pages/LinkWallet'
+import AddMember from './pages/AddMember'
 
 
 
 function App() {
-  const [count, setCount] = useState(0)
+  
 
   return (
     <>
-     <LinkWallet/>
+     <AddMember/>
       
     </>
   )
