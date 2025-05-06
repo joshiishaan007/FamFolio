@@ -5,6 +5,8 @@ import AuthPage from './pages/AuthPage'
 import Header from './components/Header'
 import Footer from './components/Footer'
 import HomePage from './pages/HomePage'
+import LinkWallet from './pages/LinkWallet'
+
 
 
 function App() {
@@ -12,7 +14,7 @@ function App() {
 
   return (
     <>
-      <HomePage/>
+     <LinkWallet/>
       
     </>
   )
