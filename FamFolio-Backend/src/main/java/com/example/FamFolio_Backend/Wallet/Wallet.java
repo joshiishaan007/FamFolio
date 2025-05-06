@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.example.FamFolio_Backend.Payment.Payment;
+import com.example.FamFolio_Backend.Transaction.Transaction;
 import com.example.FamFolio_Backend.user.User;
 
 import jakarta.persistence.Column;
@@ -20,7 +21,6 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import jakarta.transaction.Transaction;
 
 @Entity
 @Table(name = "wallets")

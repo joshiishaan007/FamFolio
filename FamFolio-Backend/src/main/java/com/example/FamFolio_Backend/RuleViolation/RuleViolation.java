@@ -3,6 +3,7 @@ package com.example.FamFolio_Backend.RuleViolation;
 import java.time.ZonedDateTime;
 
 import com.example.FamFolio_Backend.Rule.Rule;
+import com.example.FamFolio_Backend.Transaction.Transaction;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -13,7 +14,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import jakarta.transaction.Transaction;
 
 @Entity
 @Table(name = "rule_violations")
