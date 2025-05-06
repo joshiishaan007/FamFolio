@@ -17,10 +17,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.FamFolio_Backend.UserRelationship.UserRelationship;
+import com.example.FamFolio_Backend.UserRelationship.UserRelationshipRepository;
+import com.example.FamFolio_Backend.UserRelationship.UserRelationshipService;
+
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
 
+	  @Autowired
+      UserRelationshipRepository urr;
     private final UserService userService;
 
     @Autowired
@@ -38,6 +44,31 @@ public class UserController {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
+    
+    
+    @PostMapping(path = "/member/{ownerUsername}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> createMemberUser(@PathVariable String ownerUsername, @RequestBody User user) {
+        try {
+           
+            
+            
+            
+            System.out.println(ownerUsername);
+            
+            User u = userService.getUserByUsername(ownerUsername).get();
+            
+            User createdUser = userService.createUser(user);
+
+            UserRelationship ur=new UserRelationship(u,user);
+           
+        urr.save(ur);
+            
+            return new ResponseEntity<>(new UserDTO(user), HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+    
 
     // Get all users
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
