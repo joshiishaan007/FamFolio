@@ -38,13 +38,13 @@ const HeroSection = () => {
         <div className="flex flex-col md:flex-row items-center">
           {/* Left Side - Text Content */}
           <motion.div
-            className="md:w-1/2 mb-10 md:mb-0"
+            className="md:w-1/2 mb-10 md:mb-0 md:ml-10 lg:ml-20" // Added left margin here
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
           >
             <motion.h1
-              className="text-4xl md:text-5xl font-bold text-blue-800 mb-6 leading-tight"
+              className="text-4xl md:text-5xl lg:text-6xl font-bold text-blue-800 mb-6 leading-tight ml-4" // Added left margin
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.8 }}
@@ -52,7 +52,7 @@ const HeroSection = () => {
               Smarter Family Spending Starts Here
             </motion.h1>
             <motion.p
-              className="text-lg text-blue-700 mb-8 max-w-lg"
+              className="text-lg lg:text-xl text-blue-700 mb-8 max-w-lg ml-4" // Added left margin
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4, duration: 0.8 }}
@@ -61,7 +61,7 @@ const HeroSection = () => {
               together.
             </motion.p>
             <motion.div
-              className="flex flex-wrap gap-4"
+              className="flex flex-wrap gap-4 ml-4" // Added left margin
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.6, duration: 0.8 }}
@@ -90,7 +90,7 @@ const HeroSection = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <div className="relative w-full max-w-md">
+            <div className="relative w-full max-w-lg">
               <motion.div
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
@@ -105,13 +105,13 @@ const HeroSection = () => {
               ></motion.div>
 
               <motion.div
-                className="relative z-10 bg-white bg-opacity-70 backdrop-filter backdrop-blur-sm p-4 rounded-2xl shadow-xl"
+                className="relative z-10 bg-white bg-opacity-70 backdrop-filter backdrop-blur-sm p-2 rounded-2xl shadow-xl"
                 whileHover={{ y: -5, boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)" }}
                 transition={{ type: "spring", stiffness: 300, damping: 15 }}
               >
                 <img
-                  src="https://img.freepik.com/free-vector/family-budget-planning-flat-composition-with-parents-children-around-laptop-with-financial-application_1284-60972.jpg"
-                  alt="Family Finance Illustration"
+                  src="https://img.freepik.com/free-vector/family-managing-household-expenses_74855-5235.jpg"
+                  alt="Family managing finances"
                   className="w-full h-auto rounded-xl"
                 />
               </motion.div>
@@ -186,12 +186,12 @@ const FeaturesSection = () => {
           }}
         >
           <h2 className="text-3xl md:text-4xl font-bold text-blue-800 mb-4">Why FamFolio?</h2>
-          <p className="text-blue-700 max-w-2xl mx-auto">
+          <p className="text-blue-700 max-w-2xl mx-auto text-lg">
             Our platform provides everything you need to manage your family's finances effectively.
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
           {features.map((feature, index) => (
             <motion.div
               key={index}
@@ -199,12 +199,12 @@ const FeaturesSection = () => {
               initial="hidden"
               animate={controls}
               variants={featureVariants}
-              whileHover={{ y: -10, boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)" }}
-              className="bg-white bg-opacity-70 backdrop-filter backdrop-blur-sm p-6 rounded-xl shadow-md transition-all duration-300"
+              whileHover={{ y: -10, boxShadow: "0 15px 30px rgba(0, 0, 0, 0.1)" }}
+              className="bg-white bg-opacity-80 backdrop-filter backdrop-blur-sm p-8 rounded-xl shadow-lg transition-all duration-300 h-full flex flex-col"
             >
-              <div className="text-4xl mb-4">{feature.icon}</div>
-              <h3 className="text-xl font-semibold text-blue-800 mb-3">{feature.title}</h3>
-              <p className="text-blue-700">{feature.description}</p>
+              <div className="text-5xl mb-6">{feature.icon}</div>
+              <h3 className="text-2xl font-semibold text-blue-800 mb-4">{feature.title}</h3>
+              <p className="text-blue-700 text-lg flex-grow">{feature.description}</p>
             </motion.div>
           ))}
         </div>
@@ -228,61 +228,97 @@ const AboutSection = () => {
   }, [controls, inView])
 
   const badges = [
-    { icon: "🔒", text: "Secure" },
-    { icon: "⚡", text: "Real-Time" },
-    { icon: "👨‍👩‍👧‍👦", text: "Family-Focused" },
+    { icon: "🔒", text: "Bank-Level Security" },
+    { icon: "⚡", text: "Real-Time Updates" },
+    { icon: "👨‍👩‍👧‍👦", text: "Family First Design" },
+    { icon: "📱", text: "Mobile Friendly" },
   ]
 
   return (
     <section className="py-20 px-4 md:px-0 bg-blue-50" ref={ref}>
       <div className="container mx-auto">
-        <motion.div
-          className="max-w-3xl mx-auto text-center"
-          initial="hidden"
-          animate={controls}
-          variants={{
-            hidden: { opacity: 0, y: 20 },
-            visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
-          }}
-        >
-          <h2 className="text-3xl md:text-4xl font-bold text-blue-800 mb-6">What is FamFolio?</h2>
-
-          <motion.p
-            className="text-lg text-blue-700 mb-10"
+        <div className="flex flex-col lg:flex-row items-center gap-12">
+          <motion.div
+            className="lg:w-1/2"
             initial="hidden"
             animate={controls}
             variants={{
-              hidden: { opacity: 0 },
-              visible: { opacity: 1, transition: { delay: 0.3, duration: 0.6 } },
+              hidden: { opacity: 0, x: -50 },
+              visible: { opacity: 1, x: 0, transition: { duration: 0.6 } },
             }}
           >
-            FamFolio is a modern fintech platform designed for families to manage finances together. Parents stay in
-            control, children learn financial responsibility — all from a secure, intuitive dashboard.
-          </motion.p>
+            <h2 className="text-3xl md:text-4xl font-bold text-blue-800 mb-6 ml-4">
+              <span className="bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+                What is FamFolio?
+              </span>
+            </h2>
 
-          <div className="flex flex-wrap justify-center gap-6">
-            {badges.map((badge, index) => (
-              <motion.div
-                key={index}
-                className="flex items-center bg-white px-6 py-3 rounded-full shadow-sm"
-                initial="hidden"
-                animate={controls}
-                variants={{
-                  hidden: { opacity: 0, scale: 0.8 },
-                  visible: {
-                    opacity: 1,
-                    scale: 1,
-                    transition: { delay: 0.4 + index * 0.2, duration: 0.5 },
-                  },
-                }}
-                whileHover={{ y: -5, boxShadow: "0 5px 15px rgba(0, 0, 0, 0.1)" }}
-              >
-                <span className="text-2xl mr-2">{badge.icon}</span>
-                <span className="font-medium text-blue-800">{badge.text}</span>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
+            <motion.p
+              className="text-lg text-blue-700 mb-6 ml-4"
+              initial="hidden"
+              animate={controls}
+              variants={{
+                hidden: { opacity: 0 },
+                visible: { opacity: 1, transition: { delay: 0.3, duration: 0.6 } },
+              }}
+            >
+              FamFolio is a modern fintech platform designed for families to manage finances together. Parents stay in
+              control, children learn financial responsibility — all from a secure, intuitive dashboard.
+            </motion.p>
+
+            <motion.p
+              className="text-lg text-blue-700 mb-8 ml-4"
+              initial="hidden"
+              animate={controls}
+              variants={{
+                hidden: { opacity: 0 },
+                visible: { opacity: 1, transition: { delay: 0.5, duration: 0.6 } },
+              }}
+            >
+              Our mission is to help families build healthy financial habits while maintaining transparency and trust in
+              household spending.
+            </motion.p>
+
+            <div className="flex flex-wrap justify-center gap-4 mt-8">
+              {badges.map((badge, index) => (
+                <motion.div
+                  key={index}
+                  className="flex items-center bg-white px-6 py-3 rounded-lg shadow-sm"
+                  initial="hidden"
+                  animate={controls}
+                  variants={{
+                    hidden: { opacity: 0, scale: 0.8 },
+                    visible: {
+                      opacity: 1,
+                      scale: 1,
+                      transition: { delay: 0.4 + index * 0.2, duration: 0.5 },
+                    },
+                  }}
+                  whileHover={{ y: -5, boxShadow: "0 5px 15px rgba(0, 0, 0, 0.1)" }}
+                >
+                  <span className="text-2xl mr-3">{badge.icon}</span>
+                  <span className="font-medium text-blue-800">{badge.text}</span>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+
+          <motion.div
+            className="lg:w-1/2 bg-white p-6 rounded-2xl shadow-lg"
+            initial="hidden"
+            animate={controls}
+            variants={{
+              hidden: { opacity: 0, x: 50 },
+              visible: { opacity: 1, x: 0, transition: { delay: 0.2, duration: 0.6 } },
+            }}
+          >
+            <img
+              src="https://img.freepik.com/free-vector/financial-dashboard-concept-illustration_114360-8626.jpg"
+              alt="Family Finance Dashboard"
+              className="w-full h-auto rounded-lg"
+            />
+          </motion.div>
+        </div>
       </div>
     </section>
   )

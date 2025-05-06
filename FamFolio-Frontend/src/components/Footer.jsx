@@ -10,19 +10,10 @@ const Footer = () => {
   ]
 
   return (
-    <footer className="bg-gradient-to-r from-blue-50 to-blue-100 pt-12 pb-6">
+    <footer className="bg-gradient-to-r from-blue-900 to-blue-800 pt-12 pb-6">
       <div className="container mx-auto px-4">
         {/* Wave SVG */}
-        <div className="relative -mt-24 mb-12">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" className="w-full">
-            <path
-              fill="#EFF6FF"
-              fillOpacity="1"
-              d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,224C672,245,768,267,864,250.7C960,235,1056,181,1152,165.3C1248,149,1344,171,1392,181.3L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
-            ></path>
-          </svg>
-        </div>
-
+        
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           {/* Logo and Description */}
           <div className="col-span-1">
@@ -31,7 +22,7 @@ const Footer = () => {
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
             >
-              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 flex items-center justify-center mr-2">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 flex items-center justify-center mr-2">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-6 w-6 text-white"
@@ -47,18 +38,18 @@ const Footer = () => {
                   />
                 </svg>
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-blue-500 to-blue-700 text-transparent bg-clip-text">
+              <span className="text-xl font-bold bg-gradient-to-r from-cyan-300 to-blue-100 text-transparent bg-clip-text">
                 FamFolio
               </span>
             </motion.div>
-            <p className="text-blue-800 opacity-80 mb-4">
+            <p className="text-blue-100 opacity-90 mb-4">
               Empowering families to manage finances together with smart tools and insights.
             </p>
           </div>
 
           {/* Quick Links */}
           <div className="col-span-1">
-            <h3 className="text-lg font-semibold text-blue-800 mb-4">Quick Links</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">Quick Links</h3>
             <ul className="space-y-2">
               {footerLinks.map((link, index) => (
                 <motion.li
@@ -66,7 +57,7 @@ const Footer = () => {
                   whileHover={{ x: 5 }}
                   transition={{ type: "spring", stiffness: 400, damping: 10 }}
                 >
-                  <a href={link.url} className="text-blue-700 hover:text-blue-500 transition-colors">
+                  <a href={link.url} className="text-blue-200 hover:text-white transition-colors">
                     {link.name}
                   </a>
                 </motion.li>
@@ -76,18 +67,18 @@ const Footer = () => {
 
           {/* Newsletter */}
           <div className="col-span-1">
-            <h3 className="text-lg font-semibold text-blue-800 mb-4">Stay Updated</h3>
-            <p className="text-blue-800 opacity-80 mb-4">Subscribe to our newsletter for the latest updates.</p>
+            <h3 className="text-lg font-semibold text-white mb-4">Stay Updated</h3>
+            <p className="text-blue-100 opacity-90 mb-4">Subscribe to our newsletter for the latest updates.</p>
             <div className="flex">
               <input
                 type="email"
                 placeholder="Your email"
-                className="flex-grow px-4 py-2 rounded-l-full border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-grow px-4 py-2 rounded-l-full border border-blue-700 bg-blue-800 text-white placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-cyan-400"
               />
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="bg-gradient-to-r from-blue-500 to-blue-700 text-white px-4 py-2 rounded-r-full"
+                className="bg-gradient-to-r from-cyan-400 to-blue-500 text-white px-4 py-2 rounded-r-full"
               >
                 Subscribe
               </motion.button>
@@ -96,10 +87,10 @@ const Footer = () => {
         </div>
 
         {/* Divider */}
-        <div className="border-t border-blue-200 my-6"></div>
+        <div className="border-t border-blue-700 my-6"></div>
 
         {/* Copyright */}
-        <div className="text-center text-blue-800 opacity-80">
+        <div className="text-center text-blue-200 opacity-90">
           <p>© 2025 FamFolio — Built with ❤️ at DU Hacks 4.0</p>
         </div>
       </div>

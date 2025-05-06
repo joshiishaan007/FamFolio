@@ -26,8 +26,8 @@ const Header = () => {
       transition={{ duration: 0.5 }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "bg-white bg-opacity-80 backdrop-blur-md shadow-md"
-          : "bg-transparent"
+          ? "bg-gradient-to-r from-blue-900 to-blue-800 bg-opacity-90 backdrop-blur-md shadow-lg"
+          : "bg-gradient-to-r from-blue-900 to-blue-800 bg-opacity-90"
       }`}
     >
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
@@ -37,7 +37,7 @@ const Header = () => {
           whileHover={{ scale: 1.05 }}
           transition={{ type: "spring", stiffness: 400, damping: 10 }}
         >
-          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 flex items-center justify-center mr-2">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 flex items-center justify-center mr-2">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-6 w-6 text-white"
@@ -53,7 +53,7 @@ const Header = () => {
               />
             </svg>
           </div>
-          <span className="text-xl font-bold bg-gradient-to-r from-blue-500 to-blue-700 text-transparent bg-clip-text">
+          <span className="text-xl font-bold bg-gradient-to-r from-cyan-300 to-blue-100 text-transparent bg-clip-text">
             FamFolio
           </span>
         </motion.div>
@@ -64,7 +64,7 @@ const Header = () => {
             <motion.a
               key={index}
               href={`#${item.toLowerCase()}`}
-              className="text-blue-800 hover:text-blue-600 font-medium transition-colors"
+              className="text-blue-100 hover:text-white font-medium transition-colors"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -75,9 +75,12 @@ const Header = () => {
 
         {/* Get Started Button */}
         <motion.button
-          whileHover={{ scale: 1.05, boxShadow: "0 5px 15px rgba(0, 0, 0, 0.1)" }}
+          whileHover={{ 
+            scale: 1.05, 
+            boxShadow: "0 5px 15px rgba(162, 218, 255, 0.4)" 
+          }}
           whileTap={{ scale: 0.95 }}
-          className="hidden md:block bg-gradient-to-r from-blue-500 to-blue-700 text-white font-medium py-2 px-6 rounded-full shadow-md transition-all"
+          className="hidden md:block bg-gradient-to-r from-cyan-400 to-blue-500 text-white font-semibold py-2 px-6 rounded-full shadow-md transition-all"
         >
           Get Started
         </motion.button>
@@ -86,7 +89,7 @@ const Header = () => {
         <div className="md:hidden">
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="text-blue-800 focus:outline-none"
+            className="text-blue-100 hover:text-white focus:outline-none"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -121,20 +124,20 @@ const Header = () => {
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
           exit={{ opacity: 0, height: 0 }}
-          className="md:hidden bg-white bg-opacity-95 backdrop-blur-sm"
+          className="md:hidden bg-blue-800 bg-opacity-95 backdrop-blur-sm"
         >
           <div className="container mx-auto px-4 py-3 flex flex-col space-y-4">
             {["Home", "Features", "About", "Login/Register"].map((item, index) => (
               <a
                 key={index}
                 href={`#${item.toLowerCase()}`}
-                className="text-blue-800 hover:text-blue-600 font-medium py-2 transition-colors"
+                className="text-blue-100 hover:text-white font-medium py-2 transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {item}
               </a>
             ))}
-            <button className="bg-gradient-to-r from-blue-500 to-blue-700 text-white font-medium py-2 px-6 rounded-full shadow-md w-full">
+            <button className="bg-gradient-to-r from-cyan-400 to-blue-500 text-blue-900 font-semibold py-2 px-6 rounded-full shadow-md w-full">
               Get Started
             </button>
           </div>
