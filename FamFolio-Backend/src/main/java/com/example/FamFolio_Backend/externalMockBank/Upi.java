@@ -7,7 +7,10 @@ import jakarta.persistence.Id;
 @Entity
 public class Upi {
 
-    @Id @GeneratedValue
+
+
+    @Id  
+    @GeneratedValue
     int id;
     String name;
     String password;
