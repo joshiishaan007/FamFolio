@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { DollarSign, AtSign, Lock, Check, AlertCircle } from "lucide-react"
+import { AtSign, Lock, Check, AlertCircle } from "lucide-react"
 import Confetti from "react-confetti"
 
 const MerchantTransaction = () => {
@@ -165,11 +165,11 @@ const MerchantTransaction = () => {
           {/* Amount Field */}
           <motion.div variants={itemVariants} className="mb-5">
             <label htmlFor="amount" className="mb-2 block text-sm font-medium text-gray-700">
-              Amount (₹)
+              Amount
             </label>
             <div className="relative">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <DollarSign size={18} className="text-gray-400" />
+                <span className="text-gray-400">₹</span>
               </div>
               <input
                 type="text"
