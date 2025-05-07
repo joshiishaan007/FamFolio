@@ -16,6 +16,7 @@ import Otp from './pages/Otp'
 import ParentDashboard from './pages/ParentDashboard'
 import MemberDashboard from './pages/MemberDashboard'
 import MerchantTransaction from './pages/MerchantTransaction'
+import AdminDashboard from './pages/AdminDashboard'
 
 
 function App() {
