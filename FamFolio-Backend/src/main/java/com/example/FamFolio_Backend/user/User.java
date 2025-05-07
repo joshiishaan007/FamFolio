@@ -10,6 +10,7 @@ import com.example.FamFolio_Backend.Transaction.Transaction;
 import com.example.FamFolio_Backend.UserRelationship.UserRelationship;
 import com.example.FamFolio_Backend.Wallet.Wallet;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -60,6 +61,7 @@ public class User {
     private ZonedDateTime updatedAt;
     
     @OneToOne(mappedBy = "user")
+    @JsonIgnore
     private Wallet wallets;
     
     @OneToMany(mappedBy = "owner")
