@@ -11,6 +11,9 @@ import AboutUs from './pages/AboutUs'
 import ContactUs from './pages/ContactUs'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import AadharVerification from './pages/AadharVerification'
+import Otp from './pages/Otp'
+
 
 
 
@@ -19,7 +22,7 @@ function App() {
 
   return (
     <>
-     <Register/>
+   <AadharVerification/>
       
     </>
   )
