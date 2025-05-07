@@ -66,6 +66,7 @@ public class User {
     private Wallet wallets;
     
     @OneToMany(mappedBy = "owner")
+    @JsonIgnore
     private Set<UserRelationship> ownedRelationships = new HashSet<>();
     
     @OneToMany(mappedBy = "member")

@@ -63,6 +63,7 @@ public class Wallet {
     public Wallet() {
         this.balance = BigDecimal.ZERO;
         this.isActive = true;
+        this.spent= BigDecimal.ZERO;
     }
     
     // Constructor with fields
@@ -71,6 +72,7 @@ public class Wallet {
         this.balance = BigDecimal.ZERO;
         this.upiId = upiId;
         this.isActive = true;
+        this.spent= BigDecimal.ZERO;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }

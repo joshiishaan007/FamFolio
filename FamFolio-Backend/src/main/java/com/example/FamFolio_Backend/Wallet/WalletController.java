@@ -38,10 +38,12 @@ public class WalletController {
         return ResponseEntity.ok(wallet);
     }
 
-    @PutMapping("/update-balance/{userId}")
+    @PutMapping("/update-balance/{username}")
     public ResponseEntity<Wallet> updateWalletBalance(
-            @PathVariable int userId,
+            @PathVariable String username,
             @RequestBody WalletDTO walletDTO) {
+
+        int userId=userRepository.findByUsername(username).get().getId().intValue();
         Wallet wallet = walletService.updateWalletBalance(userId, walletDTO);
 
         return ResponseEntity.ok(wallet);

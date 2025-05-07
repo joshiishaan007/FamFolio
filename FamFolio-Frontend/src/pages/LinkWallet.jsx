@@ -2,8 +2,11 @@
 
 import { useState } from "react"
 import { CreditCard, Wallet } from "lucide-react"
+import axios from "axios"
+import { useNavigate } from "react-router-dom"
 
 const LinkWallet = () => {
+  const navigate = useNavigate()
   const [amount, setAmount] = useState("")
   const [paymentMethod, setPaymentMethod] = useState("card")
 
@@ -16,6 +19,10 @@ const LinkWallet = () => {
   // UPI form state
   const [upiId, setUpiId] = useState("")
   const [upiPin, setUpiPin] = useState("")
+
+  // Loading and error states
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
 
   const handleAmountChange = (e) => {
     // Only allow numbers
@@ -40,10 +47,85 @@ const LinkWallet = () => {
     }
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    // Handle payment submission logic here
-    alert(`Payment of ₹${amount} initiated via ${paymentMethod === "card" ? "Credit/Debit Card" : "UPI"}`)
+    setIsLoading(true)
+    setError("")
+
+    try {
+      // Get username and JWT token from localStorage
+      const username = localStorage.getItem("username")
+      const jwtToken = localStorage.getItem("jwt")
+
+      if (!username || !jwtToken) {
+        throw new Error("Authentication information not found. Please log in again.")
+      }
+
+      // Validate amount
+      if (!amount || isNaN(amount) ){
+        throw new Error("Please enter a valid amount")
+      }
+
+      // Prepare request body based on payment method
+      const requestBody = {
+        amount: parseFloat(amount),
+        updatetype: "increment"
+      }
+
+      if (paymentMethod === "card") {
+        // Validate card details
+        // if (!cardNumber || cardNumber.replace(/\s/g, "").length !== 16) {
+        //   throw new Error("Please enter a valid 16-digit card number")
+        // }
+        if (!expiryDate || expiryDate.length !== 5) {
+          throw new Error("Please enter a valid expiry date (MM/YY)")
+        }
+        if (!cvv || cvv.length !== 3) {
+          throw new Error("Please enter a valid 3-digit CVV")
+        }
+
+        requestBody.type = "CARD"
+        requestBody.verificationid = cardNumber.replace(/\s+/g, '');// Remove spaces from card number
+        requestBody.pin = cvv
+      } else if (paymentMethod === "upi") {
+        // Validate UPI details
+        if (!upiId || !upiId.includes("@")) {
+          throw new Error("Please enter a valid UPI ID")
+        }
+        if (!upiPin || upiPin.length !== 4) {
+          throw new Error("Please enter a valid 4-digit UPI PIN")
+        }
+
+        requestBody.type = "UPI"
+        requestBody.verificationid = upiId
+        requestBody.pin = upiPin
+      }
+
+      console.log(requestBody)
+      // Make the API call
+      await axios.put(
+        `http://localhost:8080/api/wallets/update-balance/${username}`,
+        requestBody,
+        {
+          headers: {
+            "Authorization": `Bearer ${jwtToken}`,
+            "Content-Type": "application/json"
+          }
+        }
+      )
+
+      // If successful, redirect to home page
+      navigate("/")
+    } catch (error) {
+      console.error("Payment failed:", error)
+      const errorMessage = error.response?.data?.message || 
+                         error.message || 
+                         "Payment failed. Please try again."
+      setError(errorMessage)
+      window.alert(errorMessage)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -61,8 +143,15 @@ const LinkWallet = () => {
           <p className="text-gray-500 text-sm md:text-base">Choose how you want to transfer money</p>
         </div>
 
+        {/* Error message */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Payment Method Selection - Now at the top */}
+          {/* Payment Method Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">Payment Method</label>
             <div className="grid grid-cols-2 gap-4">
@@ -250,9 +339,22 @@ const LinkWallet = () => {
           {/* Make Payment Button */}
           <button
             type="submit"
-            className="w-full mt-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 px-4 rounded-lg font-medium shadow-md hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 transition-all transform hover:-translate-y-0.5"
+            disabled={isLoading}
+            className={`w-full mt-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 px-4 rounded-lg font-medium shadow-md ${
+              isLoading ? "opacity-70 cursor-not-allowed" : "hover:from-blue-600 hover:to-blue-700"
+            } focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 transition-all transform hover:-translate-y-0.5`}
           >
-            Make Payment
+            {isLoading ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Processing...
+              </>
+            ) : (
+              "Make Payment"
+            )}
           </button>
         </form>
       </div>

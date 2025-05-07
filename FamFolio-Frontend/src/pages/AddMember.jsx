@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { UserPlus, Mail, User, CreditCard, Phone, Calendar, Lock, Eye, EyeOff } from "lucide-react"
+import axios from "axios"
 
 const AddMember = () => {
   // Form state
@@ -18,6 +19,9 @@ const AddMember = () => {
 
   // Error state
   const [errors, setErrors] = useState({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState("")
+  const [submitSuccess, setSubmitSuccess] = useState(false)
 
   // Password visibility state
   const [showPassword, setShowPassword] = useState(false)
@@ -118,13 +122,52 @@ const AddMember = () => {
   }
 
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
+    setSubmitError("")
+    setSubmitSuccess(false)
 
-    if (validateForm()) {
-      // Form is valid, proceed with submission
-      alert("Member added successfully!")
-      // Reset form after submission
+    if (!validateForm()) {
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      // Get owner username and JWT token from localStorage
+      const ownerUsername = localStorage.getItem("username")
+      const jwtToken = localStorage.getItem("jwt")
+
+      if (!ownerUsername || !jwtToken) {
+        throw new Error("Authentication information not found. Please log in again.")
+      }
+
+      // Prepare the request body
+      const requestBody = {
+        name: formData.fullName,
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        phoneNumber: formData.phoneNumber,
+        aadharNumber: formData.aadharNumber,
+        dateOfBirth: formData.dateOfBirth
+      }
+
+      // Make the API call
+      const response = await axios.post(
+        `http://localhost:8080/api/users/register/${ownerUsername}`,
+        requestBody,
+        {
+          headers: {
+            "Authorization": `Bearer ${jwtToken}`,
+            "Content-Type": "application/json"
+          }
+        }
+      )
+
+      // Handle success
+      setSubmitSuccess(true)
+      // Reset form after successful submission
       setFormData({
         fullName: "",
         email: "",
@@ -135,6 +178,18 @@ const AddMember = () => {
         password: "",
         confirmPassword: "",
       })
+      
+      // Show success message for 3 seconds
+      setTimeout(() => setSubmitSuccess(false), 3000)
+    } catch (error) {
+      console.error("Registration failed:", error)
+      setSubmitError(
+        error.response?.data?.message || 
+        error.message || 
+        "Failed to register member. Please try again."
+      )
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -165,6 +220,20 @@ const AddMember = () => {
 
         {/* Form Card */}
         <div className="bg-white bg-opacity-90 backdrop-blur-sm rounded-2xl shadow-xl p-8 relative z-10">
+          {/* Success message */}
+          {submitSuccess && (
+            <div className="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+              Member added successfully!
+            </div>
+          )}
+
+          {/* Error message */}
+          {submitError && (
+            <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+              {submitError}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Full Name */}
@@ -385,10 +454,25 @@ const AddMember = () => {
             <div className="mt-8 flex justify-center">
               <button
                 type="submit"
-                className="flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium shadow-md hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 transition-all transform hover:-translate-y-0.5"
+                disabled={isSubmitting}
+                className={`flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium shadow-md ${
+                  isSubmitting ? "opacity-70 cursor-not-allowed" : "hover:from-blue-600 hover:to-blue-700"
+                } focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 transition-all transform hover:-translate-y-0.5`}
               >
-                <UserPlus className="mr-2" size={20} />
-                Add Member
+                {isSubmitting ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="mr-2" size={20} />
+                    Add Member
+                  </>
+                )}
               </button>
             </div>
           </form>

@@ -32,7 +32,7 @@ public class MockDataInitializer {
 
     // Store UPI data as name/password pairs
     private static final List<UpiData> MOCK_UPI_DATA = Arrays.asList(
-            new UpiData("rajesh.sharma@ybl", "password1"),
+            new UpiData("rajesh.sharma@ybl", "1234"),
             new UpiData("priyanka.patel@upi", "password2"),
             new UpiData("amit.kumar@oksbi", "password3"),
             new UpiData("neha.gupta@axisbank", "password4"),

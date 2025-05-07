@@ -39,8 +39,9 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable()) // Disabling CSRF (for stateless APIs)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Enable CORS with custom configuration
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/register/{ownerUsername}").hasRole("OWNER")
-                        .requestMatchers("/api/users/register/**", "/api/users/login","/api/users/register/{regi}").permitAll() // Allow public access to register and login
+                        .requestMatchers("/api/aadhaar/validateOtp","/api/aadhaar/verify").permitAll()
+                        .requestMatchers("/api/users/register/{ownerUsername}","/api/wallets/update-balance/{userId}").hasRole("OWNER")
+                        .requestMatchers("/api/users/register/**", "/api/users/login","/api/users/register/{regi}","/api/wallets/update-balance/{userId}").permitAll() // Allow public access to register and login
                         .requestMatchers("/api/**").authenticated() // Require authentication for all other /api/** endpoints
                         .anyRequest().authenticated() // Authenticate any other requests
                 )

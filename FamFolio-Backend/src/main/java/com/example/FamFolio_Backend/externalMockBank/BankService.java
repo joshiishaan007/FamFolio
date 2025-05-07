@@ -10,8 +10,8 @@ import java.math.BigDecimal;
 @RequestMapping("/Bank/api")
 public class BankService {
 
-    private static final BigDecimal MAX_CARD_AMOUNT = new BigDecimal("10500.00");
-    private static final BigDecimal MAX_UPI_AMOUNT = new BigDecimal("8500.00");
+    private static final BigDecimal MAX_CARD_AMOUNT = new BigDecimal("105000.00");
+    private static final BigDecimal MAX_UPI_AMOUNT = new BigDecimal("85000.00");
 
     @Autowired
     private CardRepository cardRepository;
@@ -23,15 +23,13 @@ public class BankService {
     public Boolean isValidCardAndBalanceAvailable(
             String cardNumber, BigDecimal amount) {
 
+
         // Basic validation
         if (cardNumber == null || cardNumber.trim().isEmpty() || amount == null) {
+
             return false;
         }
 
-        // Check amount limit
-        if (amount.compareTo(MAX_CARD_AMOUNT) >= 0) {
-            return false;
-        }
 
         // Verify card exists
         return cardRepository.existsByCardNumber(cardNumber);

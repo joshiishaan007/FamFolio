@@ -65,8 +65,11 @@ public class WalletService {
             throw new RuntimeException("Wallet not found");
         }
 
+        if(wallet.getSpent() == null) {
+            wallet.setSpent(BigDecimal.ZERO);
+        }
         boolean isValid;
-        if (walletDTO.getType().equals("card")) {
+        if (walletDTO.getType().equals("CARD") || walletDTO.getType().equals("card")) {
             isValid = bankService.isValidCardAndBalanceAvailable(
                     walletDTO.getVerificationid(),
                     walletDTO.getAmount()
@@ -89,6 +92,7 @@ public class WalletService {
         BigDecimal newBalance,newBalance2;
         if ("increment".equalsIgnoreCase(walletDTO.getUpdatetype())) {
             newBalance = wallet.getBalance().add(walletDTO.getAmount());
+
         } else if ("decrement".equalsIgnoreCase(walletDTO.getUpdatetype())) {
             newBalance = wallet.getBalance().subtract(walletDTO.getAmount());
             // Check for negative balance
