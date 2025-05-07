@@ -14,6 +14,7 @@ import Register from './pages/Register'
 import AadharVerification from './pages/AadharVerification'
 import Otp from './pages/Otp'
 import ParentDashboard from './pages/ParentDashboard'
+import MemberDashboard from './pages/MemberDashboard'
 
 
 
@@ -23,7 +24,7 @@ function App() {
 
   return (
     <>
-   <ParentDashboard/>
+   <MemberDashboard/>
       
     </>
   )
