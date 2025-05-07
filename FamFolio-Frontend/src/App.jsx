@@ -9,6 +9,8 @@ import LinkWallet from './pages/LinkWallet'
 import AddMember from './pages/AddMember'
 import AboutUs from './pages/AboutUs'
 import ContactUs from './pages/ContactUs'
+import Login from './pages/Login'
+import Register from './pages/Register'
 
 
 
@@ -17,7 +19,7 @@ function App() {
 
   return (
     <>
-     <ContactUs/>
+     <Register/>
       
     </>
   )
