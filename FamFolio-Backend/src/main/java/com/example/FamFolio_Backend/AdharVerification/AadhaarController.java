@@ -23,4 +23,3 @@ public class AadhaarController {
         return aadhaarService.validateOtp(request.getAadhaarNumber(), request.getOtp());
     }
 }
-

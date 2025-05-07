@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 
 public class WalletDTO {
 
-
     BigDecimal amount;
     String type;
     String verificationid;

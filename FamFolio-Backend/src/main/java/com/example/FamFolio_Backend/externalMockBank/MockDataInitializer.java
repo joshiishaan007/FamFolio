@@ -7,6 +7,7 @@ import com.example.FamFolio_Backend.externalMockBank.UpiRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
@@ -42,30 +43,48 @@ public class MockDataInitializer {
             new UpiData("arun.desai@upi", "password9"),
             new UpiData("meera.choudhary@oksbi", "password10")
     );
-
     @Bean
     @Transactional
     public CommandLineRunner initializeMockData(CardRepository cardRepository, UpiRepository upiRepository) {
         return args -> {
             // Initialize Cards if table is empty
-            if (cardRepository.count() == 0) {
-                MOCK_CARD_NUMBERS.forEach(number -> {
-                    Card card = new Card(number);
-                    cardRepository.save(card);
-                });
-                System.out.println("Initialized database with 10 mock cards");
+            if (cardRepository.count() <10) {
+                for (String cardNumber : MOCK_CARD_NUMBERS) {
+                    try {
+                        Card card = new Card(cardNumber);
+                        cardRepository.save(card);
+                    } catch (DataIntegrityViolationException e) {
+                        System.err.println("Failed to insert Card: " + cardNumber + " - " + e.getMessage());
+                    }
+                }
+                System.out.println("Card initialization attempt completed");
+
+                // Verify inserted count
+                long count = cardRepository.count();
+                System.out.println("Total Cards in database: " + count);
             }
 
-            // Initialize UPIs if table is empty
+            // UPI initialization (you already have this part correctly)
             if (upiRepository.count() == 0) {
-                MOCK_UPI_DATA.forEach(data -> {
-                    Upi upi = new Upi(data.name, data.password);
-                    upiRepository.save(upi);
-                });
-                System.out.println("Initialized database with 10 mock UPIs");
+                for (UpiData data : MOCK_UPI_DATA) {
+                    try {
+                        Upi upi = new Upi(data.name(), data.password());
+                        upiRepository.save(upi);
+                    } catch (DataIntegrityViolationException e) {
+                        System.err.println("Failed to insert UPI: " + data.name() + " - " + e.getMessage());
+                    }
+                }
+                System.out.println("UPI initialization attempt completed");
+
+                long count = upiRepository.count();
+                System.out.println("Total UPIs in database: " + count);
+                if (count < MOCK_UPI_DATA.size()) {
+                    System.err.println("Warning: Only " + count + " out of " + MOCK_UPI_DATA.size() + " UPIs were inserted");
+                }
             }
         };
     }
+
 
     // Helper record for UPI data
     private record UpiData(String name, String password) {}

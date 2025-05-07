@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 public class Upi {
 
 
+
     @Id  
     @GeneratedValue
     int id;
