@@ -15,6 +15,7 @@ import AadharVerification from './pages/AadharVerification'
 import Otp from './pages/Otp'
 import ParentDashboard from './pages/ParentDashboard'
 import MemberDashboard from './pages/MemberDashboard'
+import MerchantTransaction from './pages/MerchantTransaction'
 
 
 
@@ -24,7 +25,7 @@ function App() {
 
   return (
     <>
-   <MemberDashboard/>
+ <MerchantTransaction/>
       
     </>
   )
