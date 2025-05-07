@@ -24,13 +24,13 @@ public class AadhaarController {
     }
 }
 
-class OtpValidationRequest {
-    private String aadhaarNumber;
-    private String otp;
-
-    // Getters and Setters
-    public String getAadhaarNumber() { return aadhaarNumber; }
-    public void setAadhaarNumber(String aadhaarNumber) { this.aadhaarNumber = aadhaarNumber; }
-    public String getOtp() { return otp; }
-    public void setOtp(String otp) { this.otp = otp; }
-}
+//class OtpValidationRequest {
+//    private String aadhaarNumber;
+//    private String otp;
+//
+//    // Getters and Setters
+//    public String getAadhaarNumber() { return aadhaarNumber; }
+//    public void setAadhaarNumber(String aadhaarNumber) { this.aadhaarNumber = aadhaarNumber; }
+//    public String getOtp() { return otp; }
+//    public void setOtp(String otp) { this.otp = otp; }
+//}
