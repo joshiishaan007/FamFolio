@@ -6,7 +6,7 @@ import jakarta.persistence.*;
 @Table(name = "card") // Make sure table name matches your database
 public class Card {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // Crucial for auto-increment
+    @GeneratedValue // Crucial for auto-increment
     private Long id; // Use Long instead of int for IDs
 
     @Column(name = "card_number", unique = true) // Match your column name

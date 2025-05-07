@@ -1,16 +1,19 @@
 package com.example.FamFolio_Backend.externalMockBank;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
-@Entity
+@Entity// optional but recommended
 public class Upi {
 
     @Id
-    int id;
-    String name;
-    String password;
+    @GeneratedValue
+    private Integer id; // use Integer, not int
 
+    @Column(nullable = false, unique = true)
+    private String name;
+
+    @Column(nullable = false)
+    private String password;
 
     public Upi() {
     }
@@ -18,6 +21,15 @@ public class Upi {
     public Upi(String name, String password) {
         this.name = name;
         this.password = password;
+    }
+
+    // Getters and setters
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
     }
 
     public String getName() {
