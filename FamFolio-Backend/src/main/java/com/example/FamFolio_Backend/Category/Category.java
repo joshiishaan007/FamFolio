@@ -1,6 +1,6 @@
 package com.example.FamFolio_Backend.Category;
 
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -34,7 +34,7 @@ public class Category {
     private String iconName;
     
     @Column(name = "created_at", nullable = false)
-    private ZonedDateTime createdAt;
+    private LocalDateTime createdAt;
     
     @OneToMany(mappedBy = "category")
     private Set<Payment> payments = new HashSet<>();
@@ -51,7 +51,7 @@ public class Category {
         this.name = name;
         this.description = description;
         this.iconName = iconName;
-        this.createdAt = ZonedDateTime.now();
+        this.createdAt = LocalDateTime.now();
     }
 
     // Getters and Setters
@@ -87,11 +87,11 @@ public class Category {
         this.iconName = iconName;
     }
 
-    public ZonedDateTime getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(ZonedDateTime createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
@@ -113,6 +113,6 @@ public class Category {
     
     @PrePersist
     public void prePersist() {
-        this.createdAt = ZonedDateTime.now();
+        this.createdAt = LocalDateTime.now();
     }
 }

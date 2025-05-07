@@ -33,9 +33,9 @@ public class UserRelationshipService {
                 .orElseThrow(() -> new IllegalArgumentException("Member user not found with username: " + memberUsername));
         
         // Check if relationship already exists
-//        if (userRelationshipRepository.existsByOwnerAndMember(owner, member)) {
-//            throw new IllegalArgumentException("Relationship already exists between these users");
-//        }
+        if (userRelationshipRepository.existsByOwnerAndMember(owner, member)) {
+            throw new IllegalArgumentException("Relationship already exists between these users");
+        }
         
         UserRelationship relationship = new UserRelationship(owner, member);
         userRelationshipRepository.save(relationship);

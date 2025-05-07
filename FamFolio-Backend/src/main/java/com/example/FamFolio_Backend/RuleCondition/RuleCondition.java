@@ -1,6 +1,6 @@
 package com.example.FamFolio_Backend.RuleCondition;
 
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
 
 import com.example.FamFolio_Backend.Rule.Rule;
 
@@ -37,7 +37,7 @@ public class RuleCondition {
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)
-    private ZonedDateTime createdAt;
+    private LocalDateTime createdAt;
 
     // Default constructor
     public RuleCondition() {
@@ -49,7 +49,7 @@ public class RuleCondition {
         this.conditionType = conditionType;
         this.operator = operator;
         this.valueString = valueString;
-        this.createdAt = ZonedDateTime.now();
+        this.createdAt = LocalDateTime.now();
     }
 
     // Getters and Setters
@@ -93,11 +93,11 @@ public class RuleCondition {
         this.valueString = valueString;
     }
 
-    public ZonedDateTime getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(ZonedDateTime createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 }

@@ -1,7 +1,7 @@
 package com.example.FamFolio_Backend.UserRelationship;
 
 
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
 
 /**
  * Data Transfer Object for UserRelationship entity
@@ -13,7 +13,7 @@ public class UserRelationshipDTO {
     private String ownerName;
     private String memberUsername;
     private String memberName;
-    private ZonedDateTime createdAt;
+    private LocalDateTime createdAt;
     
     public UserRelationshipDTO() {
     }
@@ -67,11 +67,11 @@ public class UserRelationshipDTO {
         this.memberName = memberName;
     }
 
-    public ZonedDateTime getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(ZonedDateTime createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 }

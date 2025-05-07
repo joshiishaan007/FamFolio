@@ -1,6 +1,6 @@
 package com.example.FamFolio_Backend.RuleAction;
 
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 import com.example.FamFolio_Backend.Rule.Rule;
@@ -28,12 +28,12 @@ public class RuleAction {
     @Column(name = "action_type", nullable = false, length = 50)
     private String actionType;
 
-    @Column(name = "action_config", columnDefinition = "jsonb")
+    @Column(name = "action_config")
     private String actionConfig; // Stored as JSON string
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)
-    private ZonedDateTime createdAt;
+    private LocalDateTime createdAt;
 
     // Helper method to get action config as JSONObject
     @Transient
@@ -60,7 +60,7 @@ public class RuleAction {
         this.rule = rule;
         this.actionType = actionType;
         this.actionConfig = actionConfig;
-        this.createdAt = ZonedDateTime.now();
+        this.createdAt = LocalDateTime.now();
     }
 
     // Getters and Setters
@@ -96,11 +96,11 @@ public class RuleAction {
         this.actionConfig = actionConfig;
     }
 
-    public ZonedDateTime getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(ZonedDateTime createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 }

@@ -1,7 +1,7 @@
 package com.example.FamFolio_Backend.user;
 
 import java.time.LocalDate;
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -10,6 +10,7 @@ import com.example.FamFolio_Backend.Transaction.Transaction;
 import com.example.FamFolio_Backend.UserRelationship.UserRelationship;
 import com.example.FamFolio_Backend.Wallet.Wallet;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -20,6 +21,8 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
 @Table(name = "users")
@@ -52,14 +55,23 @@ public class User {
     
     @Column(name = "role", nullable = false)
     private String role;
-    
+
+    @CreationTimestamp
     @Column(name = "created_at", nullable = false)
-    private ZonedDateTime createdAt;
-    
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
-    private ZonedDateTime updatedAt;
+    private LocalDateTime updatedAt;
+
+    @Column(name = "status", nullable = false)
+    private Boolean status;
+
+    @Column(name = "last_login", nullable = false)
+    private LocalDateTime lastLogin;
     
     @OneToOne(mappedBy = "user")
+    @JsonIgnore
     private Wallet wallets;
     
     @OneToMany(mappedBy = "owner")
@@ -81,21 +93,7 @@ public class User {
 	// Default constructor
     public User() {
     }
-    
-    // Constructor with fields
-    public User(String name, String username, String email, String passwordHash, String phoneNumber, 
-                String aadharNumber, LocalDate dateOfBirth, String role) {
-        this.name = name;
-        this.username = username;
-        this.email = email;
-        this.passwordHash = passwordHash;
-        this.phoneNumber = phoneNumber;
-        this.aadharNumber = aadharNumber;
-        this.dateOfBirth = dateOfBirth;
-        this.role = role;
-        this.createdAt = ZonedDateTime.now();
-        this.updatedAt = ZonedDateTime.now();
-    }
+
 
     // Getters and Setters
     public Long getId() {
@@ -170,19 +168,19 @@ public class User {
         this.role = role;
     }
 
-    public ZonedDateTime getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(ZonedDateTime createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
-    public ZonedDateTime getUpdatedAt() {
+    public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(ZonedDateTime updatedAt) {
+    public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
 
@@ -223,15 +221,19 @@ public class User {
         this.transactions = transactions;
     }
 
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = ZonedDateTime.now();
+    public Boolean getStatus() {
+        return status;
     }
-    
-    @PrePersist
-    public void prePersist() {
-        ZonedDateTime now = ZonedDateTime.now();
-        this.createdAt = now;
-        this.updatedAt = now;
+
+    public void setStatus(Boolean status) {
+        this.status = status;
+    }
+
+    public LocalDateTime getLastLogin() {
+        return lastLogin;
+    }
+
+    public void setLastLogin(LocalDateTime lastLogin) {
+        this.lastLogin = lastLogin;
     }
 }

@@ -1,6 +1,6 @@
 package com.example.FamFolio_Backend.TransactionApproval;
 
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
 
 import com.example.FamFolio_Backend.Transaction.Transaction;
 import com.example.FamFolio_Backend.user.User;
@@ -43,10 +43,10 @@ public class TransactionApproval {
     private String approvalNotes;
     
     @Column(name = "created_at", nullable = false)
-    private ZonedDateTime createdAt;
+    private LocalDateTime createdAt;
     
     @Column(name = "updated_at", nullable = false)
-    private ZonedDateTime updatedAt;
+    private LocalDateTime updatedAt;
 
     // Default constructor
     public TransactionApproval() {
@@ -57,8 +57,8 @@ public class TransactionApproval {
         this.transaction = transaction;
         this.requestedBy = requestedBy;
         this.status = status;
-        this.createdAt = ZonedDateTime.now();
-        this.updatedAt = ZonedDateTime.now();
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 
     // Getters and Setters
@@ -110,30 +110,30 @@ public class TransactionApproval {
         this.approvalNotes = approvalNotes;
     }
 
-    public ZonedDateTime getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(ZonedDateTime createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
-    public ZonedDateTime getUpdatedAt() {
+    public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(ZonedDateTime updatedAt) {
+    public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
     
     @PreUpdate
     public void preUpdate() {
-        this.updatedAt = ZonedDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
     
     @PrePersist
     public void prePersist() {
-        ZonedDateTime now = ZonedDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
         this.createdAt = now;
         this.updatedAt = now;
     }

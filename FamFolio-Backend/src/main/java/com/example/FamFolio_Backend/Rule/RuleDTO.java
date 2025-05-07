@@ -3,7 +3,7 @@ package com.example.FamFolio_Backend.Rule;
 import com.example.FamFolio_Backend.RuleAction.RuleActionDTO;
 import com.example.FamFolio_Backend.RuleCondition.RuleConditionDTO;
 
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -15,8 +15,8 @@ public class RuleDTO {
     private String ruleName;
     private String ruleType;
     private boolean isActive;
-    private ZonedDateTime createdAt;
-    private ZonedDateTime updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     private Set<RuleConditionDTO> conditions = new HashSet<>();
     private Set<RuleActionDTO> actions = new HashSet<>();
 
@@ -71,19 +71,19 @@ public class RuleDTO {
         isActive = active;
     }
 
-    public ZonedDateTime getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(ZonedDateTime createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
-    public ZonedDateTime getUpdatedAt() {
+    public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(ZonedDateTime updatedAt) {
+    public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
 
