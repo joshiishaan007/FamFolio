@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useLocation, useNavigate } from "react-router-dom" //
 
 const CreditCardIcon = () => (
   <svg
@@ -53,6 +54,8 @@ const Register = () => {
     email: "",
     confirmPassword: "",
   });
+  const location = useLocation()
+  const aadharNum = location.state
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -61,6 +64,9 @@ const Register = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    console.log(aadharNum);
+
+    
     console.log("Register with:", formData);
     // Add your registration logic here
   };

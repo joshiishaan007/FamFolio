@@ -37,7 +37,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/login", "/api/users/register").permitAll()
+                        .requestMatchers("/api/users/login", "/api/users/register","/api/aadhaar/verify","/api/aadhaar/validateOtp").permitAll()
                        // .requestMatchers("/api/users").hasRole("OWNER")
                         .anyRequest().authenticated()
                 )
