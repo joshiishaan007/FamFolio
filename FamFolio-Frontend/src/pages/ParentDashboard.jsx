@@ -1,0 +1,605 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { motion } from "framer-motion"
+import {
+  Bell,
+  LogOut,
+  Users,
+  CreditCard,
+  AlertTriangle,
+  Clock,
+  ChevronDown,
+  Plus,
+  DollarSign,
+  PieChart,
+  BarChart2,
+  ShoppingBag,
+  Book,
+  Coffee,
+  Gift,
+  Smartphone,
+} from "lucide-react"
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+} from "recharts"
+
+// Mock API calls - replace with your actual API endpoints
+const fetchDashboardData = () => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        parentName: "Rajesh",
+        totalBudget: 25000,
+        monthlySpending: 18300,
+        overspendingAlerts: 2,
+        pendingRequests: 3,
+        wallets: [
+          { id: 1, name: "Priya", limit: 5000, spent: 3200, avatar: "P" },
+          { id: 2, name: "Arjun", limit: 3000, spent: 3500, avatar: "A" },
+          { id: 3, name: "Meera", limit: 2000, spent: 1800, avatar: "M" },
+        ],
+        transactions: [
+          {
+            id: 1,
+            name: "Priya",
+            category: "groceries",
+            amount: 450,
+            date: "2023-05-06",
+            icon: <ShoppingBag size={16} />,
+          },
+          { id: 2, name: "Arjun", category: "education", amount: 1200, date: "2023-05-05", icon: <Book size={16} /> },
+          { id: 3, name: "Meera", category: "food", amount: 350, date: "2023-05-05", icon: <Coffee size={16} /> },
+          {
+            id: 4,
+            name: "Arjun",
+            category: "entertainment",
+            amount: 800,
+            date: "2023-05-04",
+            icon: <Smartphone size={16} />,
+          },
+          { id: 5, name: "Priya", category: "gifts", amount: 600, date: "2023-05-03", icon: <Gift size={16} /> },
+        ],
+        categorySpending: [
+          { name: "Food", value: 5200, color: "#38bdf8" },
+          { name: "Education", value: 7800, color: "#818cf8" },
+          { name: "Entertainment", value: 3100, color: "#c084fc" },
+          { name: "Others", value: 2200, color: "#e879f9" },
+        ],
+        requests: [
+          { id: 1, name: "Arjun", reason: "School project materials", amount: 1500, date: "2023-05-06" },
+          { id: 2, name: "Meera", reason: "Art supplies", amount: 800, date: "2023-05-05" },
+          { id: 3, name: "Priya", reason: "Birthday gift for friend", amount: 1000, date: "2023-05-04" },
+        ],
+      })
+    }, 1000)
+  })
+}
+
+const ParentDashboard = () => {
+  const [dashboardData, setDashboardData] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState("dashboard")
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const data = await fetchDashboardData()
+        setDashboardData(data)
+        setLoading(false)
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error)
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-gradient-to-br from-blue-50 to-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-200 border-t-blue-500"></div>
+          <p className="text-lg font-medium text-blue-700">Loading your dashboard...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!dashboardData) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-gradient-to-br from-blue-50 to-white">
+        <p className="text-lg font-medium text-red-500">Failed to load dashboard data</p>
+      </div>
+    )
+  }
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  }
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+      },
+    },
+  }
+
+  const CountUpAnimation = ({ end, duration = 2, prefix = "", suffix = "" }) => {
+    const [count, setCount] = useState(0)
+
+    useEffect(() => {
+      let startTime
+      let animationFrame
+
+      const updateCount = (timestamp) => {
+        if (!startTime) startTime = timestamp
+        const progress = Math.min((timestamp - startTime) / (duration * 1000), 1)
+        setCount(Math.floor(progress * end))
+
+        if (progress < 1) {
+          animationFrame = requestAnimationFrame(updateCount)
+        }
+      }
+
+      animationFrame = requestAnimationFrame(updateCount)
+
+      return () => cancelAnimationFrame(animationFrame)
+    }, [end, duration])
+
+    return (
+      <span>
+        {prefix}
+        {count.toLocaleString()}
+        {suffix}
+      </span>
+    )
+  }
+
+  return (
+    <div className="flex h-screen w-full bg-gradient-to-br from-blue-50 to-white">
+      {/* Sidebar */}
+      <motion.div
+        initial={{ x: -100, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="hidden w-64 flex-shrink-0 flex-col bg-white p-4 shadow-lg md:flex"
+      >
+        <div className="mb-8 flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 text-white">
+            <PieChart size={20} />
+          </div>
+          <h1 className="text-xl font-bold text-blue-800">FamFolio</h1>
+        </div>
+
+        <nav className="flex flex-col gap-2">
+          <button
+            onClick={() => setActiveTab("dashboard")}
+            className={`flex items-center gap-3 rounded-lg p-3 text-left transition-colors ${
+              activeTab === "dashboard" ? "bg-blue-100 text-blue-700" : "hover:bg-blue-50"
+            }`}
+          >
+            <BarChart2 size={18} />
+            <span>Dashboard</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("wallets")}
+            className={`flex items-center gap-3 rounded-lg p-3 text-left transition-colors ${
+              activeTab === "wallets" ? "bg-blue-100 text-blue-700" : "hover:bg-blue-50"
+            }`}
+          >
+            <CreditCard size={18} />
+            <span>Wallets</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("requests")}
+            className={`flex items-center gap-3 rounded-lg p-3 text-left transition-colors ${
+              activeTab === "requests" ? "bg-blue-100 text-blue-700" : "hover:bg-blue-50"
+            }`}
+          >
+            <Clock size={18} />
+            <span>Requests</span>
+            {dashboardData.pendingRequests > 0 && (
+              <span className="ml-auto flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 text-xs text-white">
+                {dashboardData.pendingRequests}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab("analytics")}
+            className={`flex items-center gap-3 rounded-lg p-3 text-left transition-colors ${
+              activeTab === "analytics" ? "bg-blue-100 text-blue-700" : "hover:bg-blue-50"
+            }`}
+          >
+            <PieChart size={18} />
+            <span>Analytics</span>
+          </button>
+        </nav>
+
+        <div className="mt-auto">
+          <button className="flex w-full items-center gap-3 rounded-lg p-3 text-left text-red-500 transition-colors hover:bg-red-50">
+            <LogOut size={18} />
+            <span>Logout</span>
+          </button>
+        </div>
+      </motion.div>
+
+      {/* Main Content */}
+      <div className="flex flex-1 flex-col overflow-auto">
+        {/* Header */}
+        <motion.header
+          initial={{ y: -50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="flex items-center justify-between border-b border-blue-100 bg-white p-4 shadow-sm"
+        >
+          <div className="flex items-center gap-4">
+            <button className="rounded-lg p-2 text-blue-700 hover:bg-blue-50 md:hidden">
+              <BarChart2 size={24} />
+            </button>
+            <h2 className="text-lg font-medium">
+              Welcome, <span className="font-bold text-blue-700">{dashboardData.parentName}</span>
+            </h2>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button className="relative rounded-full p-2 text-blue-700 hover:bg-blue-50">
+              <Bell size={20} />
+              {(dashboardData.overspendingAlerts > 0 || dashboardData.pendingRequests > 0) && (
+                <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs text-white">
+                  {dashboardData.overspendingAlerts + dashboardData.pendingRequests}
+                </span>
+              )}
+            </button>
+
+            <div className="relative">
+              <button className="flex items-center gap-2 rounded-full bg-blue-50 px-3 py-2 text-blue-700 hover:bg-blue-100">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-white">
+                  {dashboardData.parentName.charAt(0)}
+                </div>
+                <span className="hidden md:inline">{dashboardData.parentName}</span>
+                <ChevronDown size={16} />
+              </button>
+            </div>
+          </div>
+        </motion.header>
+
+        {/* Dashboard Content */}
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="flex flex-1 flex-col gap-6 overflow-auto p-4 md:p-6"
+        >
+          {/* Top Metrics Cards */}
+          <motion.div variants={itemVariants} className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <motion.div
+              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(59, 130, 246, 0.1)" }}
+              className="flex flex-col rounded-xl bg-white p-5 shadow-md transition-all"
+            >
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                <DollarSign size={20} />
+              </div>
+              <p className="text-sm text-gray-500">Total Family Budget</p>
+              <h3 className="mt-1 text-2xl font-bold text-blue-800">
+                ₹<CountUpAnimation end={dashboardData.totalBudget} />
+              </h3>
+            </motion.div>
+
+            <motion.div
+              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(59, 130, 246, 0.1)" }}
+              className="flex flex-col rounded-xl bg-white p-5 shadow-md transition-all"
+            >
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-purple-100 text-purple-600">
+                <BarChart2 size={20} />
+              </div>
+              <p className="text-sm text-gray-500">This Month's Spending</p>
+              <h3 className="mt-1 text-2xl font-bold text-purple-800">
+                ₹<CountUpAnimation end={dashboardData.monthlySpending} />
+              </h3>
+            </motion.div>
+
+            <motion.div
+              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(59, 130, 246, 0.1)" }}
+              className="flex flex-col rounded-xl bg-white p-5 shadow-md transition-all"
+            >
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-red-100 text-red-600">
+                <AlertTriangle size={20} />
+              </div>
+              <p className="text-sm text-gray-500">Overspending Alerts</p>
+              <h3 className="mt-1 text-2xl font-bold text-red-600">
+                <CountUpAnimation end={dashboardData.overspendingAlerts} suffix=" this month" />
+              </h3>
+            </motion.div>
+
+            <motion.div
+              whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(59, 130, 246, 0.1)" }}
+              className="flex flex-col rounded-xl bg-white p-5 shadow-md transition-all"
+            >
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+                <Clock size={20} />
+              </div>
+              <p className="text-sm text-gray-500">Pending Requests</p>
+              <h3 className="mt-1 text-2xl font-bold text-amber-600">
+                <CountUpAnimation end={dashboardData.pendingRequests} suffix=" approvals" />
+              </h3>
+            </motion.div>
+          </motion.div>
+
+          {/* Wallet Overview and Recent Transactions */}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            {/* Wallet Overview */}
+            <motion.div
+              variants={itemVariants}
+              className="col-span-1 flex flex-col rounded-xl bg-white p-5 shadow-md lg:col-span-2"
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-lg font-bold text-gray-800">Wallet Overview</h3>
+                <button className="flex items-center gap-1 rounded-lg bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-100">
+                  <Plus size={16} />
+                  Add Wallet
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {dashboardData.wallets.map((wallet) => (
+                  <motion.div
+                    key={wallet.id}
+                    whileHover={{ scale: 1.03 }}
+                    className={`flex flex-col rounded-lg border p-4 transition-all ${
+                      wallet.spent > wallet.limit
+                        ? "border-red-200 bg-red-50"
+                        : wallet.spent / wallet.limit > 0.8
+                          ? "border-amber-200 bg-amber-50"
+                          : "border-green-200 bg-green-50"
+                    }`}
+                  >
+                    <div className="mb-3 flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-sm text-white">
+                        {wallet.avatar}
+                      </div>
+                      <h4 className="font-medium">{wallet.name}</h4>
+                    </div>
+
+                    <div className="mb-2 flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Limit:</span>
+                      <span className="font-medium">₹{wallet.limit.toLocaleString()}</span>
+                    </div>
+
+                    <div className="mb-2 flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Spent:</span>
+                      <span className={`font-medium ${wallet.spent > wallet.limit ? "text-red-600" : "text-gray-800"}`}>
+                        ₹{wallet.spent.toLocaleString()}
+                      </span>
+                    </div>
+
+                    <div className="mb-3 h-2 w-full overflow-hidden rounded-full bg-white">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${Math.min(100, (wallet.spent / wallet.limit) * 100)}%` }}
+                        transition={{ duration: 1, delay: 0.5 }}
+                        className={`h-full rounded-full ${
+                          wallet.spent > wallet.limit
+                            ? "bg-red-500"
+                            : wallet.spent / wallet.limit > 0.8
+                              ? "bg-amber-500"
+                              : "bg-green-500"
+                        }`}
+                      />
+                    </div>
+
+                    <button className="mt-auto rounded-lg bg-white px-3 py-2 text-sm font-medium text-blue-700 shadow-sm hover:bg-blue-50">
+                      Adjust Limit
+                    </button>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Recent Transactions */}
+            <motion.div variants={itemVariants} className="col-span-1 flex flex-col rounded-xl bg-white p-5 shadow-md">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-lg font-bold text-gray-800">Recent Transactions</h3>
+                <button className="text-sm font-medium text-blue-700 hover:text-blue-800">View All</button>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                {dashboardData.transactions.map((transaction, index) => (
+                  <motion.div
+                    key={transaction.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="flex items-center gap-3 rounded-lg border border-gray-100 p-3 hover:bg-blue-50"
+                  >
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                      {transaction.icon}
+                    </div>
+
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-800">{transaction.name}</p>
+                      <p className="text-xs text-gray-500">{transaction.category}</p>
+                    </div>
+
+                    <p className="font-medium text-gray-800">₹{transaction.amount}</p>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Budget Analytics and Spending Requests */}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            {/* Budget Analytics */}
+            <motion.div variants={itemVariants} className="flex flex-col rounded-xl bg-white p-5 shadow-md">
+              <div className="mb-4">
+                <h3 className="text-lg font-bold text-gray-800">Budget Analytics</h3>
+                <p className="text-sm text-gray-500">Category-wise spending breakdown</p>
+              </div>
+
+              <div className="flex flex-1 flex-col items-center justify-center">
+                <ResponsiveContainer width="100%" height={250}>
+                  <RechartsPieChart>
+                    <Pie
+                      data={dashboardData.categorySpending}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                      animationBegin={200}
+                      animationDuration={1000}
+                    >
+                      {dashboardData.categorySpending.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip
+                      formatter={(value) => [`₹${value}`, "Amount"]}
+                      labelFormatter={(index) => dashboardData.categorySpending[index].name}
+                    />
+                  </RechartsPieChart>
+                </ResponsiveContainer>
+
+                <div className="mt-4 flex flex-wrap justify-center gap-3">
+                  {dashboardData.categorySpending.map((category) => (
+                    <div key={category.name} className="flex items-center gap-2">
+                      <div className="h-3 w-3 rounded-full" style={{ backgroundColor: category.color }} />
+                      <span className="text-sm">{category.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Spending Requests */}
+            <motion.div variants={itemVariants} className="flex flex-col rounded-xl bg-white p-5 shadow-md">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-800">Spending Requests</h3>
+                  <p className="text-sm text-gray-500">Pending approvals</p>
+                </div>
+
+                {dashboardData.pendingRequests > 0 && (
+                  <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-amber-100 px-2 text-xs font-medium text-amber-800">
+                    {dashboardData.pendingRequests} pending
+                  </span>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-3">
+                {dashboardData.requests.map((request, index) => (
+                  <motion.div
+                    key={request.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="flex flex-col gap-2 rounded-lg border border-gray-100 p-4"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm text-blue-700">
+                          {request.name.charAt(0)}
+                        </div>
+                        <span className="font-medium">{request.name}</span>
+                      </div>
+                      <span className="font-medium text-blue-700">₹{request.amount}</span>
+                    </div>
+
+                    <p className="text-sm text-gray-600">{request.reason}</p>
+
+                    <div className="mt-2 flex gap-2">
+                      <button className="flex-1 rounded-lg bg-blue-500 py-2 text-sm font-medium text-white hover:bg-blue-600">
+                        Approve
+                      </button>
+                      <button className="flex-1 rounded-lg border border-gray-200 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        Reject
+                      </button>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Member-wise Spending */}
+          <motion.div variants={itemVariants} className="flex flex-col rounded-xl bg-white p-5 shadow-md">
+            <div className="mb-4">
+              <h3 className="text-lg font-bold text-gray-800">Member-wise Spending</h3>
+              <p className="text-sm text-gray-500">Horizontal bar chart showing spending by each family member</p>
+            </div>
+
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  layout="vertical"
+                  data={dashboardData.wallets.map((wallet) => ({
+                    name: wallet.name,
+                    spent: wallet.spent,
+                    limit: wallet.limit,
+                  }))}
+                  margin={{ top: 20, right: 30, left: 40, bottom: 5 }}
+                >
+                  <XAxis type="number" />
+                  <YAxis dataKey="name" type="category" />
+                  <RechartsTooltip formatter={(value) => [`₹${value}`, "Amount"]} />
+                  <Bar
+                    dataKey="spent"
+                    fill="#3b82f6"
+                    radius={[0, 4, 4, 0]}
+                    animationBegin={300}
+                    animationDuration={1500}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </motion.div>
+
+          {/* Quick Actions */}
+          <motion.div variants={itemVariants} className="flex flex-wrap gap-4">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-3 font-medium text-white shadow-lg shadow-blue-200 hover:bg-blue-600"
+            >
+              <Users size={18} />
+              <span>Add New Member</span>
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex items-center gap-2 rounded-lg bg-green-500 px-4 py-3 font-medium text-white shadow-lg shadow-green-200 hover:bg-green-600"
+            >
+              <DollarSign size={18} />
+              <span>Top-up Wallet</span>
+            </motion.button>
+          </motion.div>
+        </motion.div>
+      </div>
+    </div>
+  )
+}
+
+export default ParentDashboard
