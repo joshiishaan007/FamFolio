@@ -1,7 +1,7 @@
 	package com.example.FamFolio_Backend.Payment;
 
 import java.math.BigDecimal;
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -74,10 +74,10 @@ public class Payment {
     private String gatewayResponse;
     
     @Column(name = "created_at", nullable = false)
-    private ZonedDateTime createdAt;
+    private LocalDateTime createdAt;
     
     @Column(name = "updated_at", nullable = false)
-    private ZonedDateTime updatedAt;
+    private LocalDateTime updatedAt;
     
     @OneToMany(mappedBy = "payment")
     private Set<Transaction> transactions = new HashSet<>();
@@ -99,8 +99,8 @@ public class Payment {
         this.paymentMethod = paymentMethod;
         this.category = category;
         this.paymentStatus = "INITIATED";
-        this.createdAt = ZonedDateTime.now();
-        this.updatedAt = ZonedDateTime.now();
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 
 	public Long getId() {
@@ -223,19 +223,19 @@ public class Payment {
 		this.gatewayResponse = gatewayResponse;
 	}
 
-	public ZonedDateTime getCreatedAt() {
+	public LocalDateTime getCreatedAt() {
 		return createdAt;
 	}
 
-	public void setCreatedAt(ZonedDateTime createdAt) {
+	public void setCreatedAt(LocalDateTime createdAt) {
 		this.createdAt = createdAt;
 	}
 
-	public ZonedDateTime getUpdatedAt() {
+	public LocalDateTime getUpdatedAt() {
 		return updatedAt;
 	}
 
-	public void setUpdatedAt(ZonedDateTime updatedAt) {
+	public void setUpdatedAt(LocalDateTime updatedAt) {
 		this.updatedAt = updatedAt;
 	}
 

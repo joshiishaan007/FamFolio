@@ -1,6 +1,6 @@
 package com.example.FamFolio_Backend.RuleCondition;
 
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
 
 import com.example.FamFolio_Backend.Rule.Rule;
 
@@ -11,8 +11,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @Table(name = "rule_conditions")
@@ -26,7 +26,7 @@ public class RuleCondition {
     @JoinColumn(name = "rule_id", nullable = false)
     private Rule rule;
     
-    @Column(name = "condition_type", nullable = false, length = 50)
+    @Column(name = "condition_type", nullable = false, length = 50) // 'AMOUNT', 'CATEGORY', 'TIME', 'DAY', 'DATE', 'MERCHANT', 'CUSTOM'
     private String conditionType;
     
     @Column(name = "operator", nullable = false, length = 20)
@@ -34,9 +34,10 @@ public class RuleCondition {
     
     @Column(name = "value_string")
     private String valueString;
-    
+
+    @CreationTimestamp
     @Column(name = "created_at", nullable = false)
-    private ZonedDateTime createdAt;
+    private LocalDateTime createdAt;
 
     // Default constructor
     public RuleCondition() {
@@ -48,7 +49,7 @@ public class RuleCondition {
         this.conditionType = conditionType;
         this.operator = operator;
         this.valueString = valueString;
-        this.createdAt = ZonedDateTime.now();
+        this.createdAt = LocalDateTime.now();
     }
 
     // Getters and Setters
@@ -92,16 +93,11 @@ public class RuleCondition {
         this.valueString = valueString;
     }
 
-    public ZonedDateTime getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(ZonedDateTime createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
-    }
-    
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = ZonedDateTime.now();
     }
 }

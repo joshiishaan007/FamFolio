@@ -1,7 +1,9 @@
 package com.example.FamFolio_Backend.Wallet;
 
+import com.example.FamFolio_Backend.Exception.UserNotFoundException;
 import com.example.FamFolio_Backend.externalMockBank.BankService;
 import com.example.FamFolio_Backend.user.User;
+import com.example.FamFolio_Backend.user.UserRepository;
 import com.example.FamFolio_Backend.user.UserService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,15 +20,15 @@ public class WalletService {
     private BankService bankService;
 
     private final WalletRepository walletRepository;
-    private final UserService userService;
+    private final UserRepository userRepository;
     private static final String UPI_SUFFIX = "@famfolio";
     private static final String ALLOWED_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     private static final int UPI_RANDOM_PART_LENGTH = 6;
 
     @Autowired
-    public WalletService(WalletRepository walletRepository, UserService userService) {
+    public WalletService(WalletRepository walletRepository, UserRepository userRepository) {
         this.walletRepository = walletRepository;
-        this.userService = userService;
+        this.userRepository = userRepository;
     }
 
     public Wallet createWallet(User user) {
@@ -55,8 +57,8 @@ public class WalletService {
         return upiId;
     }
     public Wallet updateWalletBalance(int userId, WalletDTO walletDTO) {
-        User user = userService.getUserById((long) userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById((long) userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found with id:"+userId));
 
         Wallet wallet = walletRepository.findByUserId(user.getId());
         if (wallet == null) {
@@ -84,14 +86,18 @@ public class WalletService {
         }
 
         // Handle increment/decrement logic
-        BigDecimal newBalance;
+        BigDecimal newBalance,newBalance2;
         if ("increment".equalsIgnoreCase(walletDTO.getUpdatetype())) {
             newBalance = wallet.getBalance().add(walletDTO.getAmount());
         } else if ("decrement".equalsIgnoreCase(walletDTO.getUpdatetype())) {
             newBalance = wallet.getBalance().subtract(walletDTO.getAmount());
             // Check for negative balance
+            newBalance2 = wallet.getSpent().add(walletDTO.getAmount());
+            wallet.setSpent(newBalance2);
             if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
                 throw new RuntimeException("Insufficient balance for this operation");
+
+
             }
         } else {
             throw new RuntimeException("Invalid update type. Must be 'increment' or 'decrement'");

@@ -1,18 +1,17 @@
 package com.example.FamFolio_Backend.RuleAction;
 
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
+import java.util.Map;
 
 import com.example.FamFolio_Backend.Rule.Rule;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.Type;
+import org.hibernate.type.SqlTypes;
+import org.json.JSONObject;
 
 @Entity
 @Table(name = "rule_actions")
@@ -28,12 +27,29 @@ public class RuleAction {
     
     @Column(name = "action_type", nullable = false, length = 50)
     private String actionType;
-    
-    @Column(name = "action_config", columnDefinition = "json")
-    private String actionConfig;
-    
+
+    @Column(name = "action_config")
+    private String actionConfig; // Stored as JSON string
+
+    @CreationTimestamp
     @Column(name = "created_at", nullable = false)
-    private ZonedDateTime createdAt;
+    private LocalDateTime createdAt;
+
+    // Helper method to get action config as JSONObject
+    @Transient
+    public JSONObject getActionConfigAsJson() {
+        if (actionConfig == null || actionConfig.isEmpty()) {
+            return new JSONObject();
+        }
+        return new JSONObject(actionConfig);
+    }
+
+    // Helper method to set action config from JSONObject
+    public void setActionConfigFromJson(JSONObject jsonObject) {
+        if (jsonObject != null) {
+            this.actionConfig = jsonObject.toString();
+        }
+    }
 
     // Default constructor
     public RuleAction() {
@@ -44,7 +60,7 @@ public class RuleAction {
         this.rule = rule;
         this.actionType = actionType;
         this.actionConfig = actionConfig;
-        this.createdAt = ZonedDateTime.now();
+        this.createdAt = LocalDateTime.now();
     }
 
     // Getters and Setters
@@ -80,16 +96,11 @@ public class RuleAction {
         this.actionConfig = actionConfig;
     }
 
-    public ZonedDateTime getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(ZonedDateTime createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
-    }
-    
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = ZonedDateTime.now();
     }
 }

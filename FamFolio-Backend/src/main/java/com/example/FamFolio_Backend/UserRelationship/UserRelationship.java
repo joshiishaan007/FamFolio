@@ -1,7 +1,7 @@
 package com.example.FamFolio_Backend.UserRelationship
 ;
 
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
 
 import com.example.FamFolio_Backend.user.User;
 
@@ -33,7 +33,7 @@ public class UserRelationship {
     private User member;
     
     @Column(name = "created_at", nullable = false)
-    private ZonedDateTime createdAt;
+    private LocalDateTime createdAt;
     
     // Default constructor
     public UserRelationship() {
@@ -43,7 +43,7 @@ public class UserRelationship {
     public UserRelationship(User owner, User member) {
         this.owner = owner;
         this.member = member;
-        this.createdAt = ZonedDateTime.now();
+        this.createdAt = LocalDateTime.now();
     }
     
     // Getters and Setters
@@ -71,16 +71,16 @@ public class UserRelationship {
         this.member = member;
     }
     
-    public ZonedDateTime getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
     
-    public void setCreatedAt(ZonedDateTime createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
     
     @PrePersist
     public void prePersist() {
-        this.createdAt = ZonedDateTime.now();
+        this.createdAt = LocalDateTime.now();
     }
 }

@@ -1,8 +1,12 @@
 package com.example.FamFolio_Backend.user;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+import com.example.FamFolio_Backend.Security.JwtUtil;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -25,91 +29,119 @@ import com.example.FamFolio_Backend.UserRelationship.UserRelationshipService;
 @RequestMapping("/api/users")
 public class UserController {
 
-	  @Autowired
-      UserRelationshipRepository urr;
+
     private final UserService userService;
+    private final JwtUtil jwtUtil;
 
     @Autowired
-    public UserController(UserService userService) {
+    public UserController(UserService userService, JwtUtil jwtUtil) {
+
+        this.jwtUtil = jwtUtil;
         this.userService = userService;
     }
 
     // Create a new user - explicitly set consumes to JSON
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<UserDTO> createUser(@RequestBody User user) {
-        try {
-            User createdUser = userService.createUser(user);
-            return new ResponseEntity<>(new UserDTO(createdUser), HttpStatus.CREATED);
-        } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-    }
-    
-    
-    @PostMapping(path = "/member/{ownerUsername}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> createMemberUser(@PathVariable String ownerUsername, @RequestBody User user) {
-        try {
-           
-            
-            
-            
-            System.out.println(ownerUsername);
-            
-            User u = userService.getUserByUsername(ownerUsername).get();
-            
-            User createdUser = userService.createUser(user);
+//    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+//    public ResponseEntity<UserResponseDTO> createOwner(@RequestBody UserRequestDTO user) {
+//        try {
+//            UserResponseDTO createdUser = userService.createOwner(user);
+//            return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
+//        } catch (IllegalArgumentException e) {
+//            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+//        }
+//    }
 
-            UserRelationship ur=new UserRelationship(u,user);
-           
-        urr.save(ur);
-            
-            return new ResponseEntity<>(new UserDTO(user), HttpStatus.CREATED);
+    @PostMapping("/register")
+    public ResponseEntity<Map<String, Object>> registerOwner(@Valid @RequestBody UserRequestDTO userRequestDTO) {
+        try {
+            User createdUser = userService.createOwner(userRequestDTO);
+            String token = jwtUtil.generateToken(createdUser.getUsername(), createdUser.getId());
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("token", token);
+            response.put("user", userService.convertUserToUserResponseDTO(createdUser));
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().build();
         }
     }
-    
+
+    @PostMapping("/register/{ownerUsername}")
+    public ResponseEntity<Map<String, Object>> registerMember(@Valid @RequestBody UserRequestDTO userRequestDTO,
+                                                            @PathVariable String ownerUsername) {
+        try {
+            User createdUser = userService.createMember(ownerUsername,userRequestDTO);
+            String token = jwtUtil.generateToken(createdUser.getUsername(), createdUser.getId());
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("token", token);
+            response.put("user", userService.convertUserToUserResponseDTO(createdUser));
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<Map<String, Object>> loginOwner(@RequestBody LoginRequestDTO loginRequest) {
+        try {
+            User authenticatedUser = userService.authenticateUser(
+                    loginRequest.getUsername(),
+                    loginRequest.getPassword()
+            );
+
+            String token = jwtUtil.generateToken(authenticatedUser.getUsername(), authenticatedUser.getId());
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("token", token);
+            response.put("user", userService.convertUserToUserResponseDTO(authenticatedUser));
+
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+    }
 
     // Get all users
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<UserDTO>> getAllUsers() {
-        List<User> users = userService.getAllUsers();
-        List<UserDTO> userDTOs = users.stream()
-                .map(UserDTO::new)
-                .toList();
-        return new ResponseEntity<>(userDTOs, HttpStatus.OK);
+    public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
+        List<UserResponseDTO> users = userService.getAllUsers();
+        return new ResponseEntity<>(users, HttpStatus.OK);
     }
 
     // Get user by ID
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<UserDTO> getUserById(@PathVariable Long id) {
-        Optional<User> user = userService.getUserById(id);
-        return user.map(value -> new ResponseEntity<>(new UserDTO(value), HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    public ResponseEntity<UserResponseDTO> getUserById(@PathVariable Long id) {
+        UserResponseDTO user = userService.getUserById(id);
+        return new ResponseEntity<>(user, HttpStatus.OK);
+
     }
 
     // Get user by username
     @GetMapping(value = "/username/{username}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<UserDTO> getUserByUsername(@PathVariable String username) {
-        Optional<User> user = userService.getUserByUsername(username);
-        return user.map(value -> new ResponseEntity<>(new UserDTO(value), HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    public ResponseEntity<UserResponseDTO> getUserByUsername(@PathVariable String username) {
+
+        UserResponseDTO user =userService.getUserByUsername(username);
+
+        return new ResponseEntity<>(user, HttpStatus.OK);
+
     }
 
     // Get user by email
     @GetMapping(value = "/email", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<UserDTO> getUserByEmail(@RequestParam String email) {
-        Optional<User> user = userService.getUserByEmail(email);
-        return user.map(value -> new ResponseEntity<>(new UserDTO(value), HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    public ResponseEntity<UserResponseDTO> getUserByEmail(@RequestParam String email) {
+
+        UserResponseDTO user =userService.getUserByEmail(email);
+
+        return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
     // Update user
     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @RequestBody User userDetails) {
+    public ResponseEntity<UserResponseDTO> updateUser(@PathVariable Long id, @RequestBody UserRequestDTO userDetails) {
         try {
-            User updatedUser = userService.updateUser(id, userDetails);
-            return new ResponseEntity<>(new UserDTO(updatedUser), HttpStatus.OK);
+            UserResponseDTO updatedUser = userService.updateUser(id, userDetails);
+            return new ResponseEntity<>(updatedUser, HttpStatus.OK);
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }

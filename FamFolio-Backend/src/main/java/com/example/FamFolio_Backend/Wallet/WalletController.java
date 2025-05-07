@@ -1,6 +1,9 @@
 package com.example.FamFolio_Backend.Wallet;
 
+import com.example.FamFolio_Backend.Exception.UserNotFoundException;
 import com.example.FamFolio_Backend.user.User;
+import com.example.FamFolio_Backend.user.UserRepository;
+import com.example.FamFolio_Backend.user.UserResponseDTO;
 import com.example.FamFolio_Backend.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -13,18 +16,18 @@ import java.math.BigDecimal;
 public class WalletController {
 
     private final WalletService walletService;
-    private final UserService userService;
+    private final UserRepository userRepository;
 
     @Autowired
-    public WalletController(WalletService walletService, UserService userService) {
+    public WalletController(WalletService walletService, UserRepository userRepository) {
         this.walletService = walletService;
-        this.userService = userService;
+        this.userRepository = userRepository;
     }
 
     @PostMapping("/create/{userId}")
     public ResponseEntity<Wallet> createWallet(@PathVariable Long userId) {
-        User user = userService.getUserById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(userId)
+                .orElseThrow(()-> new UserNotFoundException("User not found with Id:"+userId));
         Wallet wallet = walletService.createWallet(user);
         return ResponseEntity.ok(wallet);
     }
