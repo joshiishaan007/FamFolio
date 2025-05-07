@@ -26,38 +26,42 @@ public class SecurityConfig {
     @Autowired
     private JwtFilter jwtFilter;
 
+    // AuthenticationManager Bean
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
     }
 
+    // Security Filter Chain
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable()) // Disabling CSRF (for stateless APIs)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Enable CORS with custom configuration
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/login", "/api/users/register","/api/aadhaar/verify","/api/aadhaar/validateOtp").permitAll()
-                       // .requestMatchers("/api/users").hasRole("OWNER")
-                        .anyRequest().authenticated()
+                        .requestMatchers("/api/aadhaar/validateOtp","/api/aadhaar/verify").permitAll()
+                        .requestMatchers("/api/users/register/{ownerUsername}").hasRole("OWNER")
+                        .requestMatchers("/api/users/register", "/api/users/login").permitAll() // Allow public access to register and login
+                        .requestMatchers("/api/**").authenticated() // Require authentication for all other /api/** endpoints
+                        .anyRequest().authenticated() // Authenticate any other requests
                 )
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless session management (no session)
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class); // Add JWT filter for authentication
 
         return http.build();
     }
 
+    // CORS Configuration
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173")); // Add your frontend URL
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH","OPTIONS"));
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173")); // Frontend URL for CORS
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setAllowCredentials(true);
+        configuration.setAllowCredentials(true); // Allow credentials in CORS requests
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration("/**", configuration); // Apply CORS configuration globally
         return source;
     }
 }
-

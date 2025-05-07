@@ -8,6 +8,8 @@ import java.util.Optional;
 
 import com.example.FamFolio_Backend.Exception.UserNotFoundException;
 import com.example.FamFolio_Backend.UserRelationship.UserRelationshipService;
+import com.example.FamFolio_Backend.Wallet.WalletService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -19,14 +21,16 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserRelationshipService userRelationshipService;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final WalletService walletService;
 
     @Autowired
     public UserService(UserRepository userRepository,
                        UserRelationshipService userRelationshipService,
-                       BCryptPasswordEncoder passwordEncoder) {
+                       BCryptPasswordEncoder passwordEncoder,WalletService walletService) {
         this.userRepository = userRepository;
         this.userRelationshipService = userRelationshipService;
         this.passwordEncoder = passwordEncoder;
+        this.walletService=walletService;
     }
 
     // Create a new user
@@ -55,12 +59,15 @@ public class UserService {
         user.setRole("OWNER");
         user.setStatus(true);
         user.setLastLogin(LocalDateTime.now());
+        
+        
 
         // Hash the password before saving
         String hashedPassword = passwordEncoder.encode(userRequestDTO.getPassword());
         user.setPasswordHash(hashedPassword);
 
         user = userRepository.save(user);
+        walletService.createWallet(user);	
         
         return user;
     }
@@ -129,7 +136,7 @@ public class UserService {
         user.setPasswordHash(hashedPassword);
 
         user = userRepository.save(user);
-
+        walletService.createWallet(user);	
         userRelationshipService.createUserRelationship(ownerUsername,user.getUsername());
 
         return user;
