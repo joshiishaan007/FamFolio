@@ -19,6 +19,7 @@ import {
   Coffee,
   Gift,
   Smartphone,
+  CheckCircle,
 } from "lucide-react"
 import {
   BarChart,
@@ -88,6 +89,11 @@ const ParentDashboard = () => {
   const [dashboardData, setDashboardData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState("dashboard")
+  const [selectedWallet, setSelectedWallet] = useState(null)
+  const [fundAmount, setFundAmount] = useState("")
+  const [isAddingFunds, setIsAddingFunds] = useState(false)
+  const [fundsAdded, setFundsAdded] = useState(false)
+  const [showFundsModal, setShowFundsModal] = useState(false)
 
   useEffect(() => {
     const loadData = async () => {
@@ -103,6 +109,41 @@ const ParentDashboard = () => {
 
     loadData()
   }, [])
+
+  const handleAddFundsClick = (wallet) => {
+    setSelectedWallet(wallet)
+    setFundAmount("")
+    setFundsAdded(false)
+    setShowFundsModal(true)
+  }
+
+  const handleAddFundsSubmit = async () => {
+    if (!fundAmount || isNaN(fundAmount) || Number(fundAmount) <= 0) return
+
+    setIsAddingFunds(true)
+    
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1500))
+    
+    // In a real app, you would update the wallet data via API here
+    setIsAddingFunds(false)
+    setFundsAdded(true)
+    
+    // Reset after showing success
+    setTimeout(() => {
+      setFundsAdded(false)
+      setShowFundsModal(false)
+      // Update local state to reflect the added funds
+      setDashboardData(prev => ({
+        ...prev,
+        wallets: prev.wallets.map(w => 
+          w.id === selectedWallet.id 
+            ? { ...w, limit: w.limit + Number(fundAmount) } 
+            : w
+        )
+      }))
+    }, 2000)
+  }
 
   if (loading) {
     return (
@@ -143,6 +184,12 @@ const ParentDashboard = () => {
         stiffness: 100,
       },
     },
+  }
+
+  const modalVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -20 },
   }
 
   const CountUpAnimation = ({ end, duration = 2, prefix = "", suffix = "" }) => {
@@ -362,57 +409,62 @@ const ParentDashboard = () => {
               </div>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {dashboardData.wallets.map((wallet) => (
-                  <motion.div
-                    key={wallet.id}
-                    whileHover={{ scale: 1.03 }}
-                    className={`flex flex-col rounded-lg border p-4 transition-all ${
-                      wallet.spent > wallet.limit
-                        ? "border-red-200 bg-red-50"
-                        : wallet.spent / wallet.limit > 0.8
-                          ? "border-amber-200 bg-amber-50"
-                          : "border-green-200 bg-green-50"
-                    }`}
-                  >
-                    <div className="mb-3 flex items-center gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-sm text-white">
-                        {wallet.avatar}
-                      </div>
-                      <h4 className="font-medium">{wallet.name}</h4>
-                    </div>
+              {dashboardData.wallets.map((wallet) => (
+  <motion.div
+    key={wallet.id}
+    whileHover={{ scale: 1.03 }}
+    className={`flex flex-col rounded-lg border p-4 transition-all ${
+      wallet.spent > wallet.limit
+        ? "border-red-200 bg-red-50"
+        : wallet.spent / wallet.limit > 0.8
+          ? "border-amber-200 bg-amber-50"
+          : "border-green-200 bg-green-50"
+    }`}
+  >
+    <div className="mb-3 flex items-center gap-3">
+      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-sm text-white">
+        {wallet.avatar}
+      </div>
+      <h4 className="font-medium">{wallet.name}</h4>
+    </div>
 
-                    <div className="mb-2 flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Limit:</span>
-                      <span className="font-medium">₹{wallet.limit.toLocaleString()}</span>
-                    </div>
+    <div className="mb-2 flex items-center justify-between text-sm">
+      <span className="text-gray-600">Limit:</span>
+      <span className="font-medium">₹{wallet.limit.toLocaleString()}</span>
+    </div>
 
-                    <div className="mb-2 flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Spent:</span>
-                      <span className={`font-medium ${wallet.spent > wallet.limit ? "text-red-600" : "text-gray-800"}`}>
-                        ₹{wallet.spent.toLocaleString()}
-                      </span>
-                    </div>
+    <div className="mb-2 flex items-center justify-between text-sm">
+      <span className="text-gray-600">Spent:</span>
+      <span className={`font-medium ${wallet.spent > wallet.limit ? "text-red-600" : "text-gray-800"}`}>
+        ₹{wallet.spent.toLocaleString()}
+      </span>
+    </div>
 
-                    <div className="mb-3 h-2 w-full overflow-hidden rounded-full bg-white">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${Math.min(100, (wallet.spent / wallet.limit) * 100)}%` }}
-                        transition={{ duration: 1, delay: 0.5 }}
-                        className={`h-full rounded-full ${
-                          wallet.spent > wallet.limit
-                            ? "bg-red-500"
-                            : wallet.spent / wallet.limit > 0.8
-                              ? "bg-amber-500"
-                              : "bg-green-500"
-                        }`}
-                      />
-                    </div>
+    <div className="mb-3 h-2 w-full overflow-hidden rounded-full bg-white">
+      <motion.div
+        initial={{ width: 0 }}
+        animate={{ width: `${Math.min(100, (wallet.spent / wallet.limit) * 100)}%` }}
+        transition={{ duration: 1, delay: 0.5 }}
+        className={`h-full rounded-full ${
+          wallet.spent > wallet.limit
+            ? "bg-red-500"
+            : wallet.spent / wallet.limit > 0.8
+              ? "bg-amber-500"
+              : "bg-green-500"
+        }`}
+      />
+    </div>
 
-                    <button className="mt-auto rounded-lg bg-white px-3 py-2 text-sm font-medium text-blue-700 shadow-sm hover:bg-blue-50">
-                      Adjust Limit
-                    </button>
-                  </motion.div>
-                ))}
+    <div className="mt-2 flex justify-center">
+      <button 
+        className="w-3/4 rounded-lg bg-blue-500 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-600"
+        onClick={() => handleAddFundsClick(wallet)}
+      >
+        Add Funds
+      </button>
+    </div>
+  </motion.div>
+))}
               </div>
             </motion.div>
 
@@ -598,6 +650,68 @@ const ParentDashboard = () => {
           </motion.div>
         </motion.div>
       </div>
+
+      {/* Add Funds Modal */}
+      {showFundsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <motion.div
+            variants={modalVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl"
+          >
+            <h3 className="mb-4 text-xl font-bold text-gray-800">Add Funds to {selectedWallet?.name}'s Wallet</h3>
+            
+            <div className="mb-6">
+              <label htmlFor="fundAmount" className="mb-2 block text-sm font-medium text-gray-700">
+                Enter amount to transfer
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₹</span>
+                <input
+                  type="number"
+                  id="fundAmount"
+                  value={fundAmount}
+                  onChange={(e) => setFundAmount(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 py-3 pl-8 pr-4 text-lg font-medium focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="0"
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowFundsModal(false)}
+                className="flex-1 rounded-lg border border-gray-300 px-4 py-3 font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddFundsSubmit}
+                disabled={isAddingFunds || fundsAdded || !fundAmount || isNaN(fundAmount) || Number(fundAmount) <= 0}
+                className={`flex flex-1 items-center justify-center rounded-lg px-4 py-3 font-medium text-white ${
+                  isAddingFunds || fundsAdded
+                    ? "bg-green-500"
+                    : "bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                }`}
+              >
+                {isAddingFunds ? (
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                ) : fundsAdded ? (
+                  <div className="flex items-center gap-2">
+                    <CheckCircle size={18} />
+                    <span>Success!</span>
+                  </div>
+                ) : (
+                  "Add Funds"
+                )}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   )
 }
