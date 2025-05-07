@@ -9,18 +9,9 @@ import com.example.FamFolio_Backend.RuleCondition.RuleCondition;
 import com.example.FamFolio_Backend.RuleViolation.RuleViolation;
 import com.example.FamFolio_Backend.user.User;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
 @Table(name = "rules")
@@ -46,10 +37,12 @@ public class Rule {
     
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;
-    
-    @Column(name = "created_at", nullable = false)
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
     private ZonedDateTime createdAt;
-    
+
+    @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private ZonedDateTime updatedAt;
     
@@ -58,9 +51,26 @@ public class Rule {
     
     @OneToMany(mappedBy = "rule", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<RuleAction> actions = new HashSet<>();
-    
-    @OneToMany(mappedBy = "rule")
-    private Set<RuleViolation> violations = new HashSet<>();
+
+    public void addCondition(RuleCondition condition) {
+        conditions.add(condition);
+        condition.setRule(this);
+    }
+
+    public void removeCondition(RuleCondition condition) {
+        conditions.remove(condition);
+        condition.setRule(null);
+    }
+
+    public void addAction(RuleAction action) {
+        actions.add(action);
+        action.setRule(this);
+    }
+
+    public void removeAction(RuleAction action) {
+        actions.remove(action);
+        action.setRule(null);
+    }
 
     // Default constructor
     public Rule() {
@@ -77,6 +87,7 @@ public class Rule {
         this.createdAt = ZonedDateTime.now();
         this.updatedAt = ZonedDateTime.now();
     }
+
 
     // Getters and Setters
     public Long getId() {
@@ -157,25 +168,5 @@ public class Rule {
 
     public void setActions(Set<RuleAction> actions) {
         this.actions = actions;
-    }
-
-    public Set<RuleViolation> getViolations() {
-        return violations;
-    }
-
-    public void setViolations(Set<RuleViolation> violations) {
-        this.violations = violations;
-    }
-    
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = ZonedDateTime.now();
-    }
-    
-    @PrePersist
-    public void prePersist() {
-        ZonedDateTime now = ZonedDateTime.now();
-        this.createdAt = now;
-        this.updatedAt = now;
     }
 }

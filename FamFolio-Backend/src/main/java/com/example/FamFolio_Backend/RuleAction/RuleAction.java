@@ -1,18 +1,17 @@
 package com.example.FamFolio_Backend.RuleAction;
 
 import java.time.ZonedDateTime;
+import java.util.Map;
 
 import com.example.FamFolio_Backend.Rule.Rule;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.Type;
+import org.hibernate.type.SqlTypes;
+import org.json.JSONObject;
 
 @Entity
 @Table(name = "rule_actions")
@@ -28,12 +27,29 @@ public class RuleAction {
     
     @Column(name = "action_type", nullable = false, length = 50)
     private String actionType;
-    
-    @Column(name = "action_config", columnDefinition = "json")
-    private String actionConfig;
-    
+
+    @Column(name = "action_config", columnDefinition = "jsonb")
+    private String actionConfig; // Stored as JSON string
+
+    @CreationTimestamp
     @Column(name = "created_at", nullable = false)
     private ZonedDateTime createdAt;
+
+    // Helper method to get action config as JSONObject
+    @Transient
+    public JSONObject getActionConfigAsJson() {
+        if (actionConfig == null || actionConfig.isEmpty()) {
+            return new JSONObject();
+        }
+        return new JSONObject(actionConfig);
+    }
+
+    // Helper method to set action config from JSONObject
+    public void setActionConfigFromJson(JSONObject jsonObject) {
+        if (jsonObject != null) {
+            this.actionConfig = jsonObject.toString();
+        }
+    }
 
     // Default constructor
     public RuleAction() {
@@ -86,10 +102,5 @@ public class RuleAction {
 
     public void setCreatedAt(ZonedDateTime createdAt) {
         this.createdAt = createdAt;
-    }
-    
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = ZonedDateTime.now();
     }
 }

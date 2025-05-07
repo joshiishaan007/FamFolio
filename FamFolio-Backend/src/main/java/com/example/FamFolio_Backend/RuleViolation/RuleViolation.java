@@ -12,8 +12,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @Table(name = "rule_violations")
@@ -33,7 +33,8 @@ public class RuleViolation {
     
     @Column(name = "violation_notes")
     private String violationNotes;
-    
+
+    @CreationTimestamp
     @Column(name = "created_at", nullable = false)
     private ZonedDateTime createdAt;
 
@@ -88,10 +89,6 @@ public class RuleViolation {
 
     public void setCreatedAt(ZonedDateTime createdAt) {
         this.createdAt = createdAt;
-    }
-    
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = ZonedDateTime.now();
+
     }
 }

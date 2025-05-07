@@ -11,8 +11,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @Table(name = "rule_conditions")
@@ -26,7 +26,7 @@ public class RuleCondition {
     @JoinColumn(name = "rule_id", nullable = false)
     private Rule rule;
     
-    @Column(name = "condition_type", nullable = false, length = 50)
+    @Column(name = "condition_type", nullable = false, length = 50) // 'AMOUNT', 'CATEGORY', 'TIME', 'DAY', 'DATE', 'MERCHANT', 'CUSTOM'
     private String conditionType;
     
     @Column(name = "operator", nullable = false, length = 20)
@@ -34,7 +34,8 @@ public class RuleCondition {
     
     @Column(name = "value_string")
     private String valueString;
-    
+
+    @CreationTimestamp
     @Column(name = "created_at", nullable = false)
     private ZonedDateTime createdAt;
 
@@ -98,10 +99,5 @@ public class RuleCondition {
 
     public void setCreatedAt(ZonedDateTime createdAt) {
         this.createdAt = createdAt;
-    }
-    
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = ZonedDateTime.now();
     }
 }
