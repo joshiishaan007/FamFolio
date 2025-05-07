@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useLocation, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const CreditCardIcon = () => (
   <svg
@@ -52,23 +54,58 @@ const Register = () => {
     gender: "male",
     email: "",
     confirmPassword: "",
+    phoneNumber: "",
+    dateOfBirth: ""
   });
+  
+  const [error, setError] = useState("");
+  const location = useLocation();
+  const aadharNum = location.state;
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Register with:", formData);
-    // Add your registration logic here
+    setError("");
+    console.log(aadharNum);
+    console.log(formData)
+    // Validate passwords match
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    try {
+      const payload = {
+        name: formData.fullName,
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        phoneNumber: formData.phoneNumber,
+        aadharNumber: aadharNum,
+        dateOfBirth: formData.dateOfBirth
+      };
+
+      const response = await axios.post("http://localhost:8080/api/users/register", payload);
+      
+      // Store token and username in localStorage
+      localStorage.setItem("jwt", response.data.token);
+      localStorage.setItem("username", response.data.user.username);
+      
+      // Navigate to home page on successful registration
+      navigate("/");
+    } catch (err) {
+      console.error("Registration error:", err);
+      setError(err.response?.data?.message || "Registration failed. Please try again.");
+    }
   };
 
   const navigateToLogin = () => {
-    // You'll need to implement your navigation logic here
-    // For React Router: history.push('/login')
-    console.log("Navigate to login");
+    navigate("/login");
   };
 
   return (
@@ -93,6 +130,12 @@ const Register = () => {
           <h2 className="text-xl font-semibold text-blue-800 text-center mb-3">
             Create Your Account
           </h2>
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
 
           <motion.div
             initial={{ x: 50, opacity: 0 }}
@@ -128,31 +171,28 @@ const Register = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-blue-700 mb-1">Age</label>
+                  <label className="block text-sm font-medium text-blue-700 mb-1">Phone Number</label>
                   <input
-                    type="number"
-                    name="age"
-                    value={formData.age}
+                    type="tel"
+                    name="phoneNumber"
+                    value={formData.phoneNumber}
                     onChange={handleChange}
                     className="w-full px-4 py-2 bg-white bg-opacity-80 border border-blue-200 rounded-xl text-blue-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
-                    placeholder="Age"
+                    placeholder="Enter your phone number"
                     required
                   />
                 </div>
-                
+
                 <div>
-                  <label className="block text-sm font-medium text-blue-700 mb-1">Gender</label>
-                  <select
-                    name="gender"
-                    value={formData.gender}
+                  <label className="block text-sm font-medium text-blue-700 mb-1">Date of Birth</label>
+                  <input
+                    type="date"
+                    name="dateOfBirth"
+                    value={formData.dateOfBirth}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 bg-white bg-opacity-80 border border-blue-200 rounded-xl text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                    className="w-full px-4 py-2 bg-white bg-opacity-80 border border-blue-200 rounded-xl text-blue-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
                     required
-                  >
-                    <option value="male" className="bg-white">Male</option>
-                    <option value="female" className="bg-white">Female</option>
-                    <option value="other" className="bg-white">Other</option>
-                  </select>
+                  />
                 </div>
                 
                 <div>
@@ -235,4 +275,4 @@ const Register = () => {
   );
 };
 
-export default Register;
+export default Register;  
