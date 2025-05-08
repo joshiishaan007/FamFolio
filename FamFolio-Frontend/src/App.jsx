@@ -23,7 +23,13 @@ import RulesPage from './pages/RulesPage'
 function App() {
   return (
     <Router>
-      <div className="app-container">
+      <div className="app-container bg-gradient-to-br from-blue-50">
+        <Header/>
+        
+        <br/>
+        
+        <br/>
+        <br/>
        
         <main>
           <Routes>
