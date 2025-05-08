@@ -5,6 +5,7 @@ import com.example.FamFolio_Backend.externalMockBank.BankService;
 import com.example.FamFolio_Backend.user.User;
 import com.example.FamFolio_Backend.user.UserRepository;
 import com.example.FamFolio_Backend.user.UserService;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -109,5 +110,31 @@ public class WalletService {
 
         wallet.setBalance(newBalance);
         return walletRepository.save(wallet);
+    }
+
+    public void deductAmount(Long walletId, BigDecimal amount){
+        Wallet currentWallet = getWalletById(walletId);
+
+        BigDecimal finalAmount = currentWallet.getBalance().subtract(amount);
+
+        currentWallet.setBalance(finalAmount);
+        currentWallet.setSpent(currentWallet.getSpent().add(amount));
+    }
+
+    public void addAmount(Long walletId, BigDecimal amount){
+        Wallet currentWallet = getWalletById(walletId);
+
+        BigDecimal finalAmount = currentWallet.getBalance().add(amount);
+
+        currentWallet.setBalance(finalAmount);
+    }
+
+    public Wallet getWalletById(Long sourceWalletId) {
+        return walletRepository.findById(sourceWalletId)
+                .orElseThrow(()->new EntityNotFoundException("Wallet not found with id:"+sourceWalletId));
+    }
+
+    public Wallet getWalletByUpiId(String destinationUpiId) {
+        return walletRepository.findByUpiId(destinationUpiId);
     }
 }

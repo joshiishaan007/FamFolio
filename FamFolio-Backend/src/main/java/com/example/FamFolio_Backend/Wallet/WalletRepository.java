@@ -8,4 +8,5 @@ public interface WalletRepository extends JpaRepository<Wallet, Long> {
     boolean existsByUpiId(String upiId);
     Wallet findByUserId(Long userId);
 
+    Wallet findByUpiId(String destinationUpiId);
 }

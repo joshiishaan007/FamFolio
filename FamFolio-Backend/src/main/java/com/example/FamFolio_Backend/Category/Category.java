@@ -23,29 +23,29 @@ public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @Column(name = "name", nullable = false, unique = true, length = 100)
     private String name;
-    
+
     @Column(name = "description")
     private String description;
-    
+
     @Column(name = "icon_name", length = 50)
     private String iconName;
-    
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
-    
+
     @OneToMany(mappedBy = "category")
     private Set<Payment> payments = new HashSet<>();
-    
+
     @OneToMany(mappedBy = "category")
     private Set<Transaction> transactions = new HashSet<>();
 
     // Default constructor
     public Category() {
     }
-    
+
     // Constructor with fields
     public Category(String name, String description, String iconName) {
         this.name = name;
@@ -110,7 +110,7 @@ public class Category {
     public void setTransactions(Set<Transaction> transactions) {
         this.transactions = transactions;
     }
-    
+
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();

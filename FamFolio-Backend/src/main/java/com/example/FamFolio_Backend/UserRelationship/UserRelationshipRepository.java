@@ -18,4 +18,6 @@ public interface UserRelationshipRepository extends JpaRepository<UserRelationsh
     Optional<UserRelationship> findByOwnerAndMember(User owner, User member);
     
     boolean existsByOwnerAndMember(User owner, User member);
+
+    boolean existsByOwner_IdAndMember_Id(Long ownerId, Long memberId);
 }

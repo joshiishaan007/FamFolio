@@ -23,6 +23,11 @@ public class UserRelationshipService {
         this.userRepository = userRepository;
     }
 
+    public boolean checkOwnerHasAccessToMember(Long ownerId, Long memberId) {
+        // Check if owner has a relationship with member
+        return userRelationshipRepository.existsByOwner_IdAndMember_Id(ownerId, memberId);
+    }
+
     
     
     public void createUserRelationship(String ownerUsername, String memberUsername) {
