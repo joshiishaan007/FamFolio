@@ -1,7 +1,6 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
+import axios from "axios"
 import {
   Bell,
   CreditCard,
@@ -19,129 +18,145 @@ import {
 } from "lucide-react"
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from "recharts"
 
-// Mock API calls - replace with your actual API endpoints
-const fetchMemberData = () => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        memberName: "Aarav",
-        walletBalance: 1800,
-        walletLimit: 5000,
-        notifications: 2,
-        transactions: [
-          {
-            id: 1,
-            category: "food",
-            description: "Zomato Order",
-            amount: 450,
-            date: "2023-05-06",
-            icon: <Coffee size={16} />,
-          },
-          {
-            id: 2,
-            category: "education",
-            description: "Coursera Subscription",
-            amount: 1200,
-            date: "2023-05-05",
-            icon: <Book size={16} />,
-          },
-          {
-            id: 3,
-            category: "games",
-            description: "Steam Purchase",
-            amount: 899,
-            date: "2023-05-04",
-            icon: <Gamepad size={16} />,
-          },
-          {
-            id: 4,
-            category: "food",
-            description: "Swiggy Order",
-            amount: 350,
-            date: "2023-05-03",
-            icon: <Coffee size={16} />,
-          },
-          {
-            id: 5,
-            category: "shopping",
-            description: "Amazon Purchase",
-            amount: 1500,
-            date: "2023-05-02",
-            icon: <ShoppingBag size={16} />,
-          },
-          {
-            id: 6,
-            category: "gift",
-            description: "Birthday Gift",
-            amount: 800,
-            date: "2023-05-01",
-            icon: <Gift size={16} />,
-          },
-          {
-            id: 7,
-            category: "food",
-            description: "McDonald's",
-            amount: 250,
-            date: "2023-04-30",
-            icon: <Coffee size={16} />,
-          },
-          {
-            id: 8,
-            category: "education",
-            description: "Book Purchase",
-            amount: 550,
-            date: "2023-04-29",
-            icon: <Book size={16} />,
-          },
-        ],
-        categorySpending: [
-          { name: "Food", value: 1050, color: "#38bdf8" },
-          { name: "Education", value: 1750, color: "#818cf8" },
-          { name: "Games", value: 899, color: "#c084fc" },
-          { name: "Shopping", value: 1500, color: "#e879f9" },
-          { name: "Gifts", value: 800, color: "#fb7185" },
-        ],
-        tips: [
-          {
-            id: 1,
-            title: "Save on Food",
-            description: "Try meal prepping on weekends to reduce food delivery expenses.",
-            icon: <Coffee size={20} />,
-          },
-          {
-            id: 2,
-            title: "Education Deals",
-            description: "Look for student discounts on courses and books.",
-            icon: <Book size={20} />,
-          },
-          {
-            id: 3,
-            title: "Gaming on Budget",
-            description: "Wait for seasonal sales to purchase games at discounted prices.",
-            icon: <Gamepad size={20} />,
-          },
-        ],
-      })
-    }, 1000)
-  })
-}
-
 const MemberDashboard = () => {
   const [memberData, setMemberData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
   const [activeTipIndex, setActiveTipIndex] = useState(0)
+  const [walletData, setWalletData] = useState(null)
 
   const itemsPerPage = 4
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const data = await fetchMemberData()
-        setMemberData(data)
+        // Get user data from localStorage
+        const username = localStorage.getItem('username')
+        const token = localStorage.getItem('jwt')
+        
+        if (!username || !token) {
+          throw new Error('User not authenticated')
+        }
+
+        // Fetch wallet data
+        const response = await axios.get(
+          `http://localhost:8080/api/wallets/user/username/${username}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        )
+
+        const wallet = response.data
+        setWalletData(wallet)
+
+        // Mock data for other parts of the dashboard
+        // (You'll want to replace this with actual API calls)
+        const mockData = {
+          memberName: username,
+          walletBalance: wallet.balance - wallet.spent,
+          walletLimit: wallet.balance,
+          notifications: 2,
+          transactions: [
+            {
+              id: 1,
+              category: "food",
+              description: "Zomato Order",
+              amount: 450,
+              date: "2023-05-06",
+              icon: <Coffee size={16} />,
+            },
+            {
+              id: 2,
+              category: "education",
+              description: "Coursera Subscription",
+              amount: 1200,
+              date: "2023-05-05",
+              icon: <Book size={16} />,
+            },
+            {
+              id: 3,
+              category: "games",
+              description: "Steam Purchase",
+              amount: 899,
+              date: "2023-05-04",
+              icon: <Gamepad size={16} />,
+            },
+            {
+              id: 4,
+              category: "food",
+              description: "Swiggy Order",
+              amount: 350,
+              date: "2023-05-03",
+              icon: <Coffee size={16} />,
+            },
+            {
+              id: 5,
+              category: "shopping",
+              description: "Amazon Purchase",
+              amount: 1500,
+              date: "2023-05-02",
+              icon: <ShoppingBag size={16} />,
+            },
+            {
+              id: 6,
+              category: "gift",
+              description: "Birthday Gift",
+              amount: 800,
+              date: "2023-05-01",
+              icon: <Gift size={16} />,
+            },
+            {
+              id: 7,
+              category: "food",
+              description: "McDonald's",
+              amount: 250,
+              date: "2023-04-30",
+              icon: <Coffee size={16} />,
+            },
+            {
+              id: 8,
+              category: "education",
+              description: "Book Purchase",
+              amount: 550,
+              date: "2023-04-29",
+              icon: <Book size={16} />,
+            },
+          ],
+          categorySpending: [
+            { name: "Food", value: 1050, color: "#38bdf8" },
+            { name: "Education", value: 1750, color: "#818cf8" },
+            { name: "Games", value: 899, color: "#c084fc" },
+            { name: "Shopping", value: 1500, color: "#e879f9" },
+            { name: "Gifts", value: 800, color: "#fb7185" },
+          ],
+          tips: [
+            {
+              id: 1,
+              title: "Save on Food",
+              description: "Try meal prepping on weekends to reduce food delivery expenses.",
+              icon: <Coffee size={20} />,
+            },
+            {
+              id: 2,
+              title: "Education Deals",
+              description: "Look for student discounts on courses and books.",
+              icon: <Book size={20} />,
+            },
+            {
+              id: 3,
+              title: "Gaming on Budget",
+              description: "Wait for seasonal sales to purchase games at discounted prices.",
+              icon: <Gamepad size={20} />,
+            },
+          ],
+        }
+
+        setMemberData(mockData)
         setLoading(false)
       } catch (error) {
-        console.error("Error fetching member data:", error)
+        console.error("Error fetching data:", error)
         setLoading(false)
       }
     }
