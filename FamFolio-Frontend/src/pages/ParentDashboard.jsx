@@ -1,26 +1,7 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import {
-  Bell,
-  LogOut,
-  Users,
-  CreditCard,
-  AlertTriangle,
-  Clock,
-  ChevronDown,
-  Plus,
-  DollarSign,
-  PieChart,
-  BarChart2,
-  ShoppingBag,
-  Book,
-  Coffee,
-  Gift,
-  Smartphone,
-  CheckCircle,
-} from "lucide-react"
+import axios from "axios"
+import { Bell, LogOut, Users, CreditCard, AlertTriangle, Clock, ChevronDown, Plus, DollarSign, PieChart, BarChart2, ShoppingBag, Book, Coffee, Gift, Smartphone, CheckCircle } from 'lucide-react'
 import {
   BarChart,
   Bar,
@@ -33,57 +14,125 @@ import {
   Cell,
 } from "recharts"
 
-// Mock API calls - replace with your actual API endpoints
-const fetchDashboardData = () => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        parentName: "Rajesh",
-        totalBudget: 25000,
-        monthlySpending: 18300,
-        overspendingAlerts: 2,
-        pendingRequests: 3,
-        wallets: [
-          { id: 1, name: "Priya", limit: 5000, spent: 3200, avatar: "P" },
-          { id: 2, name: "Arjun", limit: 3000, spent: 3500, avatar: "A" },
-          { id: 3, name: "Meera", limit: 2000, spent: 1800, avatar: "M" },
-        ],
-        transactions: [
-          {
-            id: 1,
-            name: "Priya",
-            category: "groceries",
-            amount: 450,
-            date: "2023-05-06",
-            icon: <ShoppingBag size={16} />,
-          },
-          { id: 2, name: "Arjun", category: "education", amount: 1200, date: "2023-05-05", icon: <Book size={16} /> },
-          { id: 3, name: "Meera", category: "food", amount: 350, date: "2023-05-05", icon: <Coffee size={16} /> },
-          {
-            id: 4,
-            name: "Arjun",
-            category: "entertainment",
-            amount: 800,
-            date: "2023-05-04",
-            icon: <Smartphone size={16} />,
-          },
-          { id: 5, name: "Priya", category: "gifts", amount: 600, date: "2023-05-03", icon: <Gift size={16} /> },
-        ],
-        categorySpending: [
-          { name: "Food", value: 5200, color: "#38bdf8" },
-          { name: "Education", value: 7800, color: "#818cf8" },
-          { name: "Entertainment", value: 3100, color: "#c084fc" },
-          { name: "Others", value: 2200, color: "#e879f9" },
-        ],
-        requests: [
-          { id: 1, name: "Arjun", reason: "School project materials", amount: 1500, date: "2023-05-06" },
-          { id: 2, name: "Meera", reason: "Art supplies", amount: 800, date: "2023-05-05" },
-          { id: 3, name: "Priya", reason: "Birthday gift for friend", amount: 1000, date: "2023-05-04" },
-        ],
-      })
-    }, 1000)
-  })
-}
+const fetchDashboardData = async () => {
+  try {
+    const username = localStorage.getItem('username');
+    const jwtToken = localStorage.getItem('jwt');
+    
+    if (!username || !jwtToken) {
+      throw new Error('User not authenticated');
+    }
+
+    // Fetch parent wallet data
+    const parentWalletResponse = await fetch(`http://localhost:8080/api/wallets/user/username/${username}`, {
+      headers: {
+        'Authorization': `Bearer ${jwtToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!parentWalletResponse.ok) {
+      throw new Error('Failed to fetch parent wallet data');
+    }
+
+    const parentWalletData = await parentWalletResponse.json();
+
+    // Fetch member wallets data
+    const memberWalletsResponse = await fetch(`http://localhost:8080/api/relationships/memberwallets/${username}`, {
+      headers: {
+        'Authorization': `Bearer ${jwtToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!memberWalletsResponse.ok) {
+      throw new Error('Failed to fetch member wallet data');
+    }
+
+    const memberWalletsData = await memberWalletsResponse.json();
+
+    console.log(memberWalletsData)
+    // Transform the API response to match your existing data structure
+    const transformedWallets = memberWalletsData.map(wallet => ({
+      id: wallet.id,
+      name: wallet.user?.username || wallet.user?.name || "New Member",
+      username: wallet.user?.username || "",
+      limit: wallet.balance,
+      spent: wallet.spent,
+      avatar: (wallet.user?.username?.charAt(0) || (wallet.user?.name?.charAt(0))?.toUpperCase() || "M")
+    }));
+
+    // Calculate totals including parent wallet
+    const totalFamilyBalance = parentWalletData.balance + 
+      transformedWallets.reduce((sum, wallet) => sum + wallet.limit, 0);
+    
+    const totalMonthlySpending = parentWalletData.spent + 
+      transformedWallets.reduce((sum, wallet) => sum + wallet.spent, 0);
+
+    // Return the transformed data structure
+    return {
+      parentName: username,
+      parentBalance: parentWalletData.balance,
+      parentSpent: parentWalletData.spent,
+      totalBalance: totalFamilyBalance,
+      monthlySpending: totalMonthlySpending,
+      overspendingAlerts: transformedWallets.filter(wallet => wallet.spent > wallet.limit).length,
+      pendingRequests: 3, // You might want to fetch this from another API
+      wallets: transformedWallets,
+      transactions: [
+        {
+          id: 1,
+          name: transformedWallets[0]?.name || "Family Member",
+          category: "groceries",
+          amount: 450,
+          date: "2023-05-06",
+          icon: <ShoppingBag size={16} />,
+        },
+        { 
+          id: 2, 
+          name: transformedWallets[1]?.name || "Family Member", 
+          category: "education", 
+          amount: 1200, 
+          date: "2023-05-05", 
+          icon: <Book size={16} /> 
+        },
+        { 
+          id: 3, 
+          name: transformedWallets[0]?.name || "Family Member", 
+          category: "food", 
+          amount: 350, 
+          date: "2023-05-05", 
+          icon: <Coffee size={16} /> 
+        },
+      ],
+      categorySpending: [
+        { name: "Food", value: 5200, color: "#38bdf8" },
+        { name: "Education", value: 7800, color: "#818cf8" },
+        { name: "Entertainment", value: 3100, color: "#c084fc" },
+        { name: "Others", value: 2200, color: "#e879f9" },
+      ],
+      requests: [
+        { 
+          id: 1, 
+          name: transformedWallets[0]?.name || "Family Member", 
+          reason: "School project materials", 
+          amount: 1500, 
+          date: "2023-05-06" 
+        },
+        { 
+          id: 2, 
+          name: transformedWallets[1]?.name || "Family Member", 
+          reason: "Art supplies", 
+          amount: 800, 
+          date: "2023-05-05" 
+        },
+      ]
+    };
+  } catch (error) {
+    console.error('Error fetching dashboard data:', error);
+    throw error;
+  }
+};
 
 const ParentDashboard = () => {
   const [dashboardData, setDashboardData] = useState(null)
@@ -95,19 +144,19 @@ const ParentDashboard = () => {
   const [fundsAdded, setFundsAdded] = useState(false)
   const [showFundsModal, setShowFundsModal] = useState(false)
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const data = await fetchDashboardData()
-        setDashboardData(data)
-        setLoading(false)
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error)
-        setLoading(false)
-      }
+  const loadDashboardData = async () => {
+    try {
+      const data = await fetchDashboardData()
+      setDashboardData(data)
+      setLoading(false)
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error)
+      setLoading(false)
     }
+  }
 
-    loadData()
+  useEffect(() => {
+    loadDashboardData()
   }, [])
 
   const handleAddFundsClick = (wallet) => {
@@ -122,27 +171,49 @@ const ParentDashboard = () => {
 
     setIsAddingFunds(true)
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    // In a real app, you would update the wallet data via API here
-    setIsAddingFunds(false)
-    setFundsAdded(true)
-    
-    // Reset after showing success
-    setTimeout(() => {
-      setFundsAdded(false)
-      setShowFundsModal(false)
-      // Update local state to reflect the added funds
-      setDashboardData(prev => ({
-        ...prev,
-        wallets: prev.wallets.map(w => 
-          w.id === selectedWallet.id 
-            ? { ...w, limit: w.limit + Number(fundAmount) } 
-            : w
-        )
-      }))
-    }, 2000)
+    try {
+      const username = localStorage.getItem('username');
+      const jwtToken = localStorage.getItem('jwt');
+      
+      if (!username || !jwtToken) {
+        throw new Error('User not authenticated');
+      }
+
+      // Call the transfer API with axios
+      const response = await axios.post(
+        'http://localhost:8080/api/payments/transfer',
+        {
+          ownername: username,
+          membername: selectedWallet.username,
+          amount: Number(fundAmount)
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${jwtToken}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.status === 200 || response.status === 201) {
+        setFundsAdded(true)
+        
+        // Reset after showing success
+        setTimeout(() => {
+          setFundsAdded(false)
+          setShowFundsModal(false)
+          
+          // Reload dashboard data
+          loadDashboardData();
+        }, 2000)
+      } else {
+        throw new Error('Failed to add funds');
+      }
+    } catch (error) {
+      console.error('Error adding funds:', error)
+    } finally {
+      setIsAddingFunds(false)
+    }
   }
 
   if (loading) {
@@ -347,10 +418,13 @@ const ParentDashboard = () => {
               <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
                 <DollarSign size={20} />
               </div>
-              <p className="text-sm text-gray-500">Total Family Budget</p>
+              <p className="text-sm text-gray-500">Total Family Balance</p>
               <h3 className="mt-1 text-2xl font-bold text-blue-800">
-                ₹<CountUpAnimation end={dashboardData.totalBudget} />
+                ₹<CountUpAnimation end={dashboardData.totalBalance} />
               </h3>
+              <p className="mt-1 text-xs text-gray-500">
+                ({dashboardData.parentName}: ₹{dashboardData.parentBalance.toLocaleString()} + Members: ₹{(dashboardData.totalBalance - dashboardData.parentBalance).toLocaleString()})
+              </p>
             </motion.div>
 
             <motion.div
@@ -364,6 +438,9 @@ const ParentDashboard = () => {
               <h3 className="mt-1 text-2xl font-bold text-purple-800">
                 ₹<CountUpAnimation end={dashboardData.monthlySpending} />
               </h3>
+              <p className="mt-1 text-xs text-gray-500">
+                ({dashboardData.parentName}: ₹{dashboardData.parentSpent.toLocaleString()} + Members: ₹{(dashboardData.monthlySpending - dashboardData.parentSpent).toLocaleString()})
+              </p>
             </motion.div>
 
             <motion.div
@@ -409,62 +486,92 @@ const ParentDashboard = () => {
               </div>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {dashboardData.wallets.map((wallet) => (
-  <motion.div
-    key={wallet.id}
-    whileHover={{ scale: 1.03 }}
-    className={`flex flex-col rounded-lg border p-4 transition-all ${
-      wallet.spent > wallet.limit
-        ? "border-red-200 bg-red-50"
-        : wallet.spent / wallet.limit > 0.8
-          ? "border-amber-200 bg-amber-50"
-          : "border-green-200 bg-green-50"
-    }`}
-  >
-    <div className="mb-3 flex items-center gap-3">
-      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-sm text-white">
-        {wallet.avatar}
-      </div>
-      <h4 className="font-medium">{wallet.name}</h4>
-    </div>
+                {/* Parent Wallet Card */}
+                <motion.div
+                  whileHover={{ scale: 1.03 }}
+                  className="flex flex-col rounded-lg border border-blue-200 bg-blue-50 p-4 transition-all"
+                >
+                  <div className="mb-3 flex items-center gap-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-sm text-white">
+                      {dashboardData.parentName.charAt(0)}
+                    </div>
+                    <h4 className="font-medium">{dashboardData.parentName}'s Wallet</h4>
+                  </div>
 
-    <div className="mb-2 flex items-center justify-between text-sm">
-      <span className="text-gray-600">Limit:</span>
-      <span className="font-medium">₹{wallet.limit.toLocaleString()}</span>
-    </div>
+                  <div className="mb-2 flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Balance:</span>
+                    <span className="font-medium">₹{dashboardData.parentBalance.toLocaleString()}</span>
+                  </div>
 
-    <div className="mb-2 flex items-center justify-between text-sm">
-      <span className="text-gray-600">Spent:</span>
-      <span className={`font-medium ${wallet.spent > wallet.limit ? "text-red-600" : "text-gray-800"}`}>
-        ₹{wallet.spent.toLocaleString()}
-      </span>
-    </div>
+                  <div className="mb-2 flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Spent:</span>
+                    <span className="font-medium text-gray-800">
+                      ₹{dashboardData.parentSpent.toLocaleString()}
+                    </span>
+                  </div>
 
-    <div className="mb-3 h-2 w-full overflow-hidden rounded-full bg-white">
-      <motion.div
-        initial={{ width: 0 }}
-        animate={{ width: `${Math.min(100, (wallet.spent / wallet.limit) * 100)}%` }}
-        transition={{ duration: 1, delay: 0.5 }}
-        className={`h-full rounded-full ${
-          wallet.spent > wallet.limit
-            ? "bg-red-500"
-            : wallet.spent / wallet.limit > 0.8
-              ? "bg-amber-500"
-              : "bg-green-500"
-        }`}
-      />
-    </div>
+                  <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-white">
+                    <div className="h-full w-full rounded-full bg-blue-200"></div>
+                  </div>
+                </motion.div>
 
-    <div className="mt-2 flex justify-center">
-      <button 
-        className="w-3/4 rounded-lg bg-blue-500 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-600"
-        onClick={() => handleAddFundsClick(wallet)}
-      >
-        Add Funds
-      </button>
-    </div>
-  </motion.div>
-))}
+                {/* Member Wallets */}
+                {dashboardData.wallets.map((wallet) => (
+                  <motion.div
+                    key={wallet.id}
+                    whileHover={{ scale: 1.03 }}
+                    className={`flex flex-col rounded-lg border p-4 transition-all ${
+                      wallet.spent > wallet.limit
+                        ? "border-red-200 bg-red-50"
+                        : wallet.spent / wallet.limit > 0.8
+                          ? "border-amber-200 bg-amber-50"
+                          : "border-green-200 bg-green-50"
+                    }`}
+                  >
+                    <div className="mb-3 flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-sm text-white">
+                        {wallet.avatar}
+                      </div>
+                      <h4 className="font-medium">{wallet.name}</h4>
+                    </div>
+
+                    <div className="mb-2 flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Balance:</span>
+                      <span className="font-medium">₹{wallet.limit.toLocaleString()}</span>
+                    </div>
+
+                    <div className="mb-2 flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Spent:</span>
+                      <span className={`font-medium ${wallet.spent > wallet.limit ? "text-red-600" : "text-gray-800"}`}>
+                        ₹{wallet.spent.toLocaleString()}
+                      </span>
+                    </div>
+
+                    <div className="mb-3 h-2 w-full overflow-hidden rounded-full bg-white">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${Math.min(100, (wallet.spent / wallet.limit) * 100)}%` }}
+                        transition={{ duration: 1, delay: 0.5 }}
+                        className={`h-full rounded-full ${
+                          wallet.spent > wallet.limit
+                            ? "bg-red-500"
+                            : wallet.spent / wallet.limit > 0.8
+                              ? "bg-amber-500"
+                              : "bg-green-500"
+                        }`}
+                      />
+                    </div>
+
+                    <div className="mt-2 flex justify-center">
+                      <button 
+                        className="w-3/4 rounded-lg bg-blue-500 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-600"
+                        onClick={() => handleAddFundsClick(wallet)}
+                      >
+                        Add Funds
+                      </button>
+                    </div>
+                  </motion.div>
+                ))}
               </div>
             </motion.div>
 
@@ -564,6 +671,9 @@ const ParentDashboard = () => {
                 {dashboardData.requests.map((request, index) => (
                   <motion.div
                     key={request.id}
+                    initial={{ opacity: 0, y: 20 }}>
+                  <motion.div
+                    key={request.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
@@ -589,7 +699,7 @@ const ParentDashboard = () => {
                         Reject
                       </button>
                     </div>
-                  </motion.div>
+                  </motion.div></motion.div>
                 ))}
               </div>
             </motion.div>
@@ -606,11 +716,18 @@ const ParentDashboard = () => {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   layout="vertical"
-                  data={dashboardData.wallets.map((wallet) => ({
-                    name: wallet.name,
-                    spent: wallet.spent,
-                    limit: wallet.limit,
-                  }))}
+                  data={[
+                    {
+                      name: dashboardData.parentName,
+                      spent: dashboardData.parentSpent,
+                      limit: dashboardData.parentBalance,
+                    },
+                    ...dashboardData.wallets.map((wallet) => ({
+                      name: wallet.name,
+                      spent: wallet.spent,
+                      limit: wallet.limit,
+                    }))
+                  ]}
                   margin={{ top: 20, right: 30, left: 40, bottom: 5 }}
                 >
                   <XAxis type="number" />

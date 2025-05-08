@@ -9,6 +9,8 @@ import com.example.FamFolio_Backend.Payment.Payment;
 import com.example.FamFolio_Backend.Transaction.Transaction;
 import com.example.FamFolio_Backend.user.User;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -32,6 +34,7 @@ public class Wallet {
     
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false)
+    
     private User user;
     
     @Column(name = "balance", nullable = false, precision = 19, scale = 4)
@@ -51,9 +54,11 @@ public class Wallet {
     private LocalDateTime updatedAt;
     
     @OneToMany(mappedBy = "sourceWallet")
+    @JsonIgnore
     private Set<Payment> outgoingPayments = new HashSet<>();
     
     @OneToMany(mappedBy = "wallet")
+    @JsonIgnore
     private Set<Transaction> transactions = new HashSet<>();
 
 
