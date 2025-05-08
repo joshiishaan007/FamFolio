@@ -9,37 +9,32 @@ import java.math.BigDecimal;
 
 public class InternalTransferRequest {
 
-    private String username; // Optional, if null use user's own wallet
+    private String ownername; // Optional, if null use user's own wallet
 
-    @NotBlank(message = "Destination UPI ID is required")
-    private String destinationUpiId;
+    private String membername;
+
 
     @NotNull(message = "Amount is required")
     @DecimalMin(value = "0.01", message = "Amount must be greater than zero")
     private BigDecimal amount;
 
-    private String purpose;
-
-
-    private Category category;
-
-    // Getters and setters
-
-
-    public String getUsername() {
-        return username;
+    public InternalTransferRequest() {
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public String getOwnername() {
+        return ownername;
     }
 
-    public String getDestinationUpiId() {
-        return destinationUpiId;
+    public void setOwnername(String ownername) {
+        this.ownername = ownername;
     }
 
-    public void setDestinationUpiId(String destinationUpiId) {
-        this.destinationUpiId = destinationUpiId;
+    public String getMembername() {
+        return membername;
+    }
+
+    public void setMembername(String membername) {
+        this.membername = membername;
     }
 
     public BigDecimal getAmount() {
@@ -48,21 +43,5 @@ public class InternalTransferRequest {
 
     public void setAmount(BigDecimal amount) {
         this.amount = amount;
-    }
-
-    public String getPurpose() {
-        return purpose;
-    }
-
-    public void setPurpose(String purpose) {
-        this.purpose = purpose;
-    }
-
-    public Category getCategory() {
-        return category;
-    }
-
-    public void setCategory(Category category) {
-        this.category = category;
     }
 }

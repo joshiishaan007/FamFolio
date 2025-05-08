@@ -148,13 +148,14 @@ public class PaymentService {
     public Payment processInternalTransfer(InternalTransferRequest transferRequest) {
         // Get current authenticated user
         User currentUser = getCurrentUser();
-        User user;
+        User owner,member;
 
         // Get source wallet (sender)
-        Wallet sourceWallet;
-        if (transferRequest.getUsername() != null) {
-            user=userRepository.findByUsername(transferRequest.getUsername()).get();
-            sourceWallet = user.getWallets();
+        Wallet sourceWallet,destinationWallet;
+        if (transferRequest.getOwnername() != null) {
+            owner=userRepository.findByUsername(transferRequest.getOwnername()).get();
+
+            sourceWallet = owner.getWallets();
             // Verify user can access this wallet
             verifyWalletAccess(currentUser, sourceWallet);
         } else {
@@ -162,9 +163,11 @@ public class PaymentService {
         }
 
         // Get destination wallet by UPI ID
-        Wallet destinationWallet = walletService.getWalletByUpiId(transferRequest.getDestinationUpiId());
+        member=userRepository.findByUsername(transferRequest.getMembername()).get();
+        destinationWallet=member.getWallets();
+
         if (destinationWallet == null) {
-            throw new ResourceNotFoundException("Destination wallet not found with UPI ID: " + transferRequest.getDestinationUpiId());
+            throw new ResourceNotFoundException("Destination wallet not found with UPI ID: " + destinationWallet.getUpiId());
         }
 
         // Check wallet status
@@ -181,12 +184,12 @@ public class PaymentService {
         Payment payment = new Payment();
         payment.setSourceWallet(sourceWallet);
         payment.setDestinationType("WALLET");
-        payment.setDestinationIdentifier(transferRequest.getDestinationUpiId());
+        payment.setDestinationIdentifier(destinationWallet.getUpiId());
         payment.setInitiatedBy(currentUser);
         payment.setAmount(transferRequest.getAmount());
         payment.setPaymentMethod("UPI_TRANSFER");
-        payment.setPaymentPurpose(transferRequest.getPurpose());
-        payment.setCategory(transferRequest.getCategory());
+        payment.setPaymentPurpose("Transfered to member ny owner");
+        payment.setCategory(null);
         payment.setPaymentStatus("PROCESSING");
 
         Payment savedPayment = paymentRepository.save(payment);
@@ -209,7 +212,7 @@ public class PaymentService {
                     savedPayment,
                     transferRequest.getAmount().negate(),
                     "DEBIT",
-                    transferRequest.getCategory(),
+                    null,
                     null,
                     "Transfer to " + destinationWallet.getUpiId(),
                     "COMPLETED",
@@ -223,7 +226,7 @@ public class PaymentService {
                     savedPayment,
                     transferRequest.getAmount(),
                     "CREDIT",
-                    transferRequest.getCategory(),
+                    null,
                     null,
                     "Transfer from " + sourceWallet.getUpiId(),
                     "COMPLETED",
