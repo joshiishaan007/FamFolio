@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 
 public class InternalTransferRequest {
 
-    private Long sourceWalletId; // Optional, if null use user's own wallet
+    private String username; // Optional, if null use user's own wallet
 
     @NotBlank(message = "Destination UPI ID is required")
     private String destinationUpiId;
@@ -20,17 +20,18 @@ public class InternalTransferRequest {
 
     private String purpose;
 
+
     private Category category;
 
     // Getters and setters
 
 
-    public Long getSourceWalletId() {
-        return sourceWalletId;
+    public String getUsername() {
+        return username;
     }
 
-    public void setSourceWalletId(Long sourceWalletId) {
-        this.sourceWalletId = sourceWalletId;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getDestinationUpiId() {

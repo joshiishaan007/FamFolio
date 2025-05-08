@@ -16,8 +16,8 @@ public class PaymentRequestDTO {
     @NotNull(message = "Category ID is required")
     private Long categoryId;
 
-    @NotNull(message = "Source wallet ID is required")
-    private Long sourceWalletId;
+    @NotNull(message = "username is required")
+    private String username;
 
     @NotBlank(message = "Destination type is required")
     private String destinationType;
@@ -64,12 +64,12 @@ public class PaymentRequestDTO {
         this.categoryId = categoryId;
     }
 
-    public Long getSourceWalletId() {
-        return sourceWalletId;
+    public String getUsername() {
+        return username;
     }
 
-    public void setSourceWalletId(Long sourceWalletId) {
-        this.sourceWalletId = sourceWalletId;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getDestinationType() {

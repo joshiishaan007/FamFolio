@@ -8,6 +8,8 @@ import com.example.FamFolio_Backend.Transaction.TransactionService;
 import com.example.FamFolio_Backend.Wallet.Wallet;
 import com.example.FamFolio_Backend.Wallet.WalletService;
 import com.example.FamFolio_Backend.user.User;
+import com.example.FamFolio_Backend.user.UserRepository;
+import com.example.FamFolio_Backend.user.UserResponseDTO;
 import com.example.FamFolio_Backend.user.UserService;
 import com.example.FamFolio_Backend.UserRelationship.UserRelationshipService;
 import jakarta.persistence.EntityNotFoundException;
@@ -23,6 +25,7 @@ import java.time.LocalDateTime;
 @Service
 public class PaymentService {
 
+    private final UserRepository userRepository;
     private final PaymentRepository paymentRepository;
     private final WalletService walletService;
     private final TransactionService transactionService;
@@ -31,12 +34,13 @@ public class PaymentService {
     private final CategoryRepository categoryRepository;
 
     @Autowired
-    public PaymentService(PaymentRepository paymentRepository,
+    public PaymentService(UserRepository userRepository, PaymentRepository paymentRepository,
                           WalletService walletService,
                           TransactionService transactionService,
                           UserService userService,
                           UserRelationshipService userRelationshipService,
                           CategoryRepository categoryRepository) {
+        this.userRepository = userRepository;
         this.paymentRepository = paymentRepository;
         this.walletService = walletService;
         this.transactionService = transactionService;
@@ -49,12 +53,16 @@ public class PaymentService {
     public Payment processExternalPayment(PaymentRequestDTO paymentRequest) {
         // Get current authenticated user
         User currentUser = getCurrentUser();
+        User user;
 
         // Determine the source wallet based on request
         Wallet sourceWallet;
-        if (paymentRequest.getSourceWalletId() != null) {
+
+        if (paymentRequest.getUsername() != null) {
             // If source wallet ID is provided, check access
-            sourceWallet = walletService.getWalletById(paymentRequest.getSourceWalletId());
+
+            user=userRepository.findByUsername(paymentRequest.getUsername()).get();
+            sourceWallet = user.getWallets();
 
             // Check if user can use this wallet
             verifyWalletAccess(currentUser, sourceWallet);
@@ -140,11 +148,13 @@ public class PaymentService {
     public Payment processInternalTransfer(InternalTransferRequest transferRequest) {
         // Get current authenticated user
         User currentUser = getCurrentUser();
+        User user;
 
         // Get source wallet (sender)
         Wallet sourceWallet;
-        if (transferRequest.getSourceWalletId() != null) {
-            sourceWallet = walletService.getWalletById(transferRequest.getSourceWalletId());
+        if (transferRequest.getUsername() != null) {
+            user=userRepository.findByUsername(transferRequest.getUsername()).get();
+            sourceWallet = user.getWallets();
             // Verify user can access this wallet
             verifyWalletAccess(currentUser, sourceWallet);
         } else {
