@@ -80,12 +80,13 @@ function App() {
                   <Route path="/parent-dashboard" element={
                     <ProtectedRoute requiredRole="OWNER">
                       <ParentDashboard />
+    
                     </ProtectedRoute>
                   } />
                   <Route path="/member-dashboard" element={
-                    <ProtectedRoute requiredRole="MEMBER">
+            
                       <MemberDashboard />
-                    </ProtectedRoute>
+                  
                   } />
                   <Route path="/merchant-transaction" element={
                     <ProtectedRoute>

@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
+import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   Bell,
   LogOut,
@@ -367,83 +369,10 @@ const ParentDashboard = () => {
   };
 
   return (
-    <div className="flex h-screen w-full bg-gradient-to-br from-blue-50 to-white">
-      {/* Sidebar */}
-      <motion.div
-        initial={{ x: -100, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className="hidden w-64 flex-shrink-0 flex-col bg-white p-4 shadow-lg md:flex"
-      >
-        <div className="mb-8 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 text-white">
-            <PieChart size={20} />
-          </div>
-          <h1 className="text-xl font-bold text-blue-800">FamFolio</h1>
-        </div>
-
-        <nav className="flex flex-col gap-2">
-          <button
-            onClick={() => setActiveTab("dashboard")}
-            className={`flex items-center gap-3 rounded-lg p-3 text-left transition-colors ${
-              activeTab === "dashboard"
-                ? "bg-blue-100 text-blue-700"
-                : "hover:bg-blue-50"
-            }`}
-          >
-            <BarChart2 size={18} />
-            <span>Dashboard</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("wallets")}
-            className={`flex items-center gap-3 rounded-lg p-3 text-left transition-colors ${
-              activeTab === "wallets"
-                ? "bg-blue-100 text-blue-700"
-                : "hover:bg-blue-50"
-            }`}
-          >
-            <CreditCard size={18} />
-            <span>Wallets</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("requests")}
-            className={`flex items-center gap-3 rounded-lg p-3 text-left transition-colors ${
-              activeTab === "requests"
-                ? "bg-blue-100 text-blue-700"
-                : "hover:bg-blue-50"
-            }`}
-          >
-            <Clock size={18} />
-            <span>Requests</span>
-            {dashboardData.pendingRequests > 0 && (
-              <span className="ml-auto flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 text-xs text-white">
-                {dashboardData.pendingRequests}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab("analytics")}
-            className={`flex items-center gap-3 rounded-lg p-3 text-left transition-colors ${
-              activeTab === "analytics"
-                ? "bg-blue-100 text-blue-700"
-                : "hover:bg-blue-50"
-            }`}
-          >
-            <PieChart size={18} />
-            <span>Analytics</span>
-          </button>
-        </nav>
-
-        <div className="mt-auto">
-          <button className="flex w-full items-center gap-3 rounded-lg p-3 text-left text-red-500 transition-colors hover:bg-red-50">
-            <LogOut size={18} />
-            <span>Logout</span>
-          </button>
-        </div>
-      </motion.div>
-
+    <div className="flex h-screen w-full bg-gradient-to-br from-blue-50 to-white overflow-hidden">
+      
       {/* Main Content */}
-      <div className="flex flex-1 flex-col overflow-auto">
+      <div className="flex flex-1 flex-col overflow-hidden">
         {/* Header */}
         <motion.header
           initial={{ y: -50, opacity: 0 }}
@@ -463,28 +392,7 @@ const ParentDashboard = () => {
             </h2>
           </div>
 
-          <div className="flex items-center gap-3">
-            <button className="relative rounded-full p-2 text-blue-700 hover:bg-blue-50">
-              <Bell size={20} />
-              {(dashboardData.overspendingAlerts > 0 ||
-                dashboardData.pendingRequests > 0) && (
-                <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs text-white">
-                  {dashboardData.overspendingAlerts +
-                    dashboardData.pendingRequests}
-                </span>
-              )}
-            </button>
-
-            <div className="relative">
-              <button className="flex items-center gap-2 rounded-full bg-blue-50 px-3 py-2 text-blue-700 hover:bg-blue-100">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-white">
-                  {dashboardData.parentName.charAt(0)}
-                </div>
-                <span className="hidden md:inline">{dashboardData.parentName}</span>
-                <ChevronDown size={16} />
-              </button>
-            </div>
-          </div>
+          
         </motion.header>
 
         {/* Dashboard Content */}
@@ -493,6 +401,7 @@ const ParentDashboard = () => {
           initial="hidden"
           animate="visible"
           className="flex flex-1 flex-col gap-6 overflow-auto p-4 md:p-6"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {/* Top Metrics Cards */}
           <motion.div
@@ -597,10 +506,12 @@ const ParentDashboard = () => {
                 <h3 className="text-lg font-bold text-gray-800">
                   Wallet Overview
                 </h3>
-                <button className="flex items-center gap-1 rounded-lg bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-100">
-                  <Plus size={16} />
-                  Add Wallet
-                </button>
+                <Link to="/add-member">
+      <button className="flex items-center gap-1 rounded-lg bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-100">
+        <Plus size={16} />
+        Add Wallet
+      </button>
+    </Link>
               </div>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -774,66 +685,8 @@ const ParentDashboard = () => {
             </motion.div>
           </div>
 
-          {/* Budget Analytics and Spending Requests */}
+          {/* Spending Requests and Member-wise Spending */}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            {/* Budget Analytics */}
-            <motion.div
-              variants={itemVariants}
-              className="flex flex-col rounded-xl bg-white p-5 shadow-md"
-            >
-              <div className="mb-4">
-                <h3 className="text-lg font-bold text-gray-800">
-                  Budget Analytics
-                </h3>
-                <p className="text-sm text-gray-500">
-                  Category-wise spending breakdown
-                </p>
-              </div>
-
-              <div className="flex flex-1 flex-col items-center justify-center">
-                <ResponsiveContainer width="100%" height={250}>
-                  <RechartsPieChart>
-                    <Pie
-                      data={dashboardData.categorySpending}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={5}
-                      dataKey="value"
-                      animationBegin={200}
-                      animationDuration={1000}
-                    >
-                      {dashboardData.categorySpending.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <RechartsTooltip
-                      formatter={(value) => [`₹${value}`, "Amount"]}
-                      labelFormatter={(index) =>
-                        dashboardData.categorySpending[index].name
-                      }
-                    />
-                  </RechartsPieChart>
-                </ResponsiveContainer>
-
-                <div className="mt-4 flex flex-wrap justify-center gap-3">
-                  {dashboardData.categorySpending.map((category) => (
-                    <div
-                      key={category.name}
-                      className="flex items-center gap-2"
-                    >
-                      <div
-                        className="h-3 w-3 rounded-full"
-                        style={{ backgroundColor: category.color }}
-                      />
-                      <span className="text-sm">{category.name}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-
             {/* Spending Requests */}
             <motion.div
               variants={itemVariants}
@@ -894,58 +747,61 @@ const ParentDashboard = () => {
                 ))}
               </div>
             </motion.div>
+
+            {/* Member-wise Spending */}
+            <motion.div
+              variants={itemVariants}
+              className="flex flex-col rounded-xl bg-white p-5 shadow-md"
+            >
+              <div className="mb-4">
+                <h3 className="text-lg font-bold text-gray-800">
+                  Member-wise Spending
+                </h3>
+                <p className="text-sm text-gray-500">
+                  Horizontal bar chart showing spending by each family member
+                </p>
+              </div>
+
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    layout="vertical"
+                    data={[
+                      {
+                        name: dashboardData.parentName,
+                        spent: dashboardData.parentSpent,
+                        limit: dashboardData.parentBalance,
+                      },
+                      ...dashboardData.wallets.map((wallet) => ({
+                        name: wallet.name,
+                        spent: wallet.spent,
+                        limit: wallet.limit,
+                      })),
+                    ]}
+                    margin={{ top: 20, right: 30, left: 40, bottom: 5 }}
+                  >
+                    <XAxis type="number" />
+                    <YAxis dataKey="name" type="category" />
+                    <RechartsTooltip
+                      formatter={(value) => [`₹${value}`, "Amount"]}
+                    />
+                    <Bar
+                      dataKey="spent"
+                      fill="#3b82f6"
+                      radius={[0, 4, 4, 0]}
+                      animationBegin={300}
+                      animationDuration={1500}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </motion.div>
           </div>
 
-          {/* Member-wise Spending */}
-          <motion.div
-            variants={itemVariants}
-            className="flex flex-col rounded-xl bg-white p-5 shadow-md"
-          >
-            <div className="mb-4">
-              <h3 className="text-lg font-bold text-gray-800">
-                Member-wise Spending
-              </h3>
-              <p className="text-sm text-gray-500">
-                Horizontal bar chart showing spending by each family member
-              </p>
-            </div>
-
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  layout="vertical"
-                  data={[
-                    {
-                      name: dashboardData.parentName,
-                      spent: dashboardData.parentSpent,
-                      limit: dashboardData.parentBalance,
-                    },
-                    ...dashboardData.wallets.map((wallet) => ({
-                      name: wallet.name,
-                      spent: wallet.spent,
-                      limit: wallet.limit,
-                    })),
-                  ]}
-                  margin={{ top: 20, right: 30, left: 40, bottom: 5 }}
-                >
-                  <XAxis type="number" />
-                  <YAxis dataKey="name" type="category" />
-                  <RechartsTooltip
-                    formatter={(value) => [`₹${value}`, "Amount"]}
-                  />
-                  <Bar
-                    dataKey="spent"
-                    fill="#3b82f6"
-                    radius={[0, 4, 4, 0]}
-                    animationBegin={300}
-                    animationDuration={1500}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </motion.div>
           {/* Quick Actions */}
           <motion.div variants={itemVariants} className="flex flex-wrap gap-4">
+            
+            <Link to="/add-member">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -954,15 +810,17 @@ const ParentDashboard = () => {
               <Users size={18} />
               <span>Add New Member</span>
             </motion.button>
-
+            </Link>
+                <Link to="/link-wallet"> 
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="flex items-center gap-2 rounded-lg bg-green-500 px-4 py-3 font-medium text-white shadow-lg shadow-green-200 hover:bg-green-600"
             >
-              <DollarSign size={18} />
+              
               <span>Top-up Wallet</span>
             </motion.button>
+            </Link>
           </motion.div>
         </motion.div>
       </div>

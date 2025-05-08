@@ -225,20 +225,7 @@ const MemberDashboard = () => {
             <p className="text-sm text-blue-600">{currentDate}</p>
           </div>
 
-          <div className="flex items-center gap-4">
-            <button className="relative rounded-full p-2 text-blue-700 hover:bg-blue-100">
-              <Bell size={24} />
-              {memberData.notifications > 0 && (
-                <span className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
-                  {memberData.notifications}
-                </span>
-              )}
-            </button>
-
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 text-white">
-              {memberData.memberName.charAt(0)}
-            </div>
-          </div>
+         
         </motion.header>
 
         {/* Wallet Summary Card */}
