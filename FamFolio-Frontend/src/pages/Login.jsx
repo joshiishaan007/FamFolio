@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 const CreditCardIcon = () => (
   <svg
@@ -48,22 +49,54 @@ const Login = () => {
     username: "",
     password: "",
   });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Login with:", formData.username, formData.password);
-    // Add your login logic here
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch("http://localhost:8080/api/users/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: formData.username,
+          password: formData.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Login failed");
+      }
+
+      // Store user data in localStorage
+      localStorage.setItem("username", data.user.username);
+      localStorage.setItem("jwt", data.token);
+      
+
+      // Redirect to home page
+      navigate("/");
+    } catch (err) {
+      setError(err.message || "Login failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const navigateToRegister = () => {
-    // You'll need to implement your navigation logic here
-    // For React Router: history.push('/register')
-    console.log("Navigate to register");
+    navigate("/register");
   };
 
   return (
@@ -88,6 +121,12 @@ const Login = () => {
           <h2 className="text-xl font-semibold text-blue-800 text-center mb-3">
             Welcome Back
           </h2>
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
 
           <motion.div
             initial={{ x: -50, opacity: 0 }}
@@ -136,9 +175,12 @@ const Login = () => {
               <div className="flex justify-center">
                 <button
                   type="submit"
-                  className="px-8 py-2 mt-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-lg shadow-md hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 transition-all duration-300 transform hover:scale-[1.02]"
+                  disabled={loading}
+                  className={`px-8 py-2 mt-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-lg shadow-md hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 transition-all duration-300 transform hover:scale-[1.02] ${
+                    loading ? "opacity-70 cursor-not-allowed" : ""
+                  }`}
                 >
-                  Login
+                  {loading ? "Logging in..." : "Login"}
                 </button>
               </div>
             </form>
