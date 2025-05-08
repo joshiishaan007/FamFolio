@@ -5,6 +5,8 @@ import { Link, useNavigate } from "react-router-dom";
 const Header = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -15,28 +17,54 @@ const Header = () => {
       }
     };
 
+    const jwt = localStorage.getItem('jwt');
+    const role = localStorage.getItem('role');
+    setIsLoggedIn(!!jwt);
+    setUserRole(role);
+
     window.addEventListener("scroll", handleScroll);
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
   }, [scrolled]);
 
-  const navItems = [
-    { name: "Home", path: "/" },
-    { name: "Link Wallet", path: "/link-wallet" },
-    { name: "Add Member", path: "/add-member" },
-    { name: "Make Payment", path: "/merchant-transaction" },
-    { name: "Create Rules", path: "/rules" },
-    { name: "Parent Dashboard", path: "/parent-dashboard" },
-    { name: "Member Dashboard", path: "/member-dashboard" },
-    { name: "Admin Dashboard", path: "/admin-dashboard" },
-    { name: "About Us", path: "/about" },
-    { name: "Contact Us", path: "/contact" }
-  ];
+  const handleLogout = () => {
+    localStorage.removeItem('jwt');
+    localStorage.removeItem('username');
+    localStorage.removeItem('role');
+    setIsLoggedIn(false);
+    setUserRole(null);
+    navigate('/login');
+  };
 
   const handleGetStarted = () => {
     navigate("/login");
   };
+
+  const getNavItems = () => {
+    if (!isLoggedIn) {
+      return []; // Return empty array when logged out
+    }
+
+    const allNavItems = [
+      { name: "Home", path: "/" },
+      { name: "Top Up Wallet", path: "/link-wallet", roles: ["OWNER"] },
+      { name: "Add Member", path: "/add-member", roles: ["OWNER"] },
+      { name: "Make Payment", path: "/merchant-transaction", roles: ["OWNER", "MEMBER"] },
+      { name: "Create Rules", path: "/rules", roles: ["OWNER"] },
+      { name: "Member Dashboard", path: "/member-dashboard", roles: ["MEMBER","OWNER"] },
+      { name: "Admin Dashboard", path: "/admin-dashboard", roles: ["ADMIN"] },
+      { name: "About Us", path: "/about" },
+      { name: "Contact Us", path: "/contact" }
+    ];
+
+    return allNavItems.filter(item => 
+      (!item.roles || (userRole && item.roles.includes(userRole))) &&
+      (isLoggedIn || item.path !== "/")
+    );
+  };
+
+  const navItems = getNavItems();
 
   return (
     <motion.header
@@ -50,7 +78,7 @@ const Header = () => {
       }`}
     >
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-        {/* Logo */}
+        {/* Logo - Always visible */}
         <motion.div 
           className="flex items-center"
           whileHover={{ scale: 1.05 }}
@@ -58,20 +86,7 @@ const Header = () => {
         >
           <Link to="/" className="flex items-center">
             <div className="w-10 h-10 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 flex items-center justify-center mr-2">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-indian-rupee-icon lucide-indian-rupee"><path d="M6 3h12"/><path d="M6 8h12"/><path d="m6 13 8.5 8"/><path d="M6 13h3"/><path d="M9 13c6.667 0 6.667-10 0-10"/></svg>
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-cyan-300 to-blue-100 text-transparent bg-clip-text">
               FamFolio
@@ -79,72 +94,90 @@ const Header = () => {
           </Link>
         </motion.div>
 
-        {/* Desktop Navigation - Tightened spacing */}
-        <nav className="hidden lg:flex items-center space-x-3 mx-2">
-          {navItems.map((item, index) => (
-            <motion.div
-              key={index}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Link
-                to={item.path}
-                className="text-blue-100 hover:text-white font-medium transition-colors text-[14px] whitespace-nowrap px-1.5 py-0.5"
+        {/* Desktop Navigation - Only shown when logged in */}
+        {isLoggedIn && (
+          <nav className="hidden lg:flex items-center space-x-3 mx-2">
+            {navItems.map((item, index) => (
+              <motion.div
+                key={index}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                {item.name}
-              </Link>
-            </motion.div>
-          ))}
-        </nav>
+                <Link
+                  to={item.path}
+                  className="text-blue-100 hover:text-white font-medium transition-colors text-[14px] whitespace-nowrap px-1.5 py-0.5"
+                >
+                  {item.name}
+                </Link>
+              </motion.div>
+            ))}
+          </nav>
+        )}
 
-        {/* Get Started Button - Compact version */}
-        <motion.button
-          whileHover={{ 
-            scale: 1.05, 
-            boxShadow: "0 5px 15px rgba(162, 218, 255, 0.4)" 
-          }}
-          whileTap={{ scale: 0.95 }}
-          className="hidden md:block bg-gradient-to-r from-cyan-400 to-blue-500 text-white font-semibold py-1.5 px-4 rounded-full shadow-md transition-all text-sm"
-          onClick={handleGetStarted}
-        >
-          Get Started
-        </motion.button>
-
-        {/* Mobile Menu Button */}
-        <div className="lg:hidden">
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="text-blue-100 hover:text-white focus:outline-none"
+        {/* Auth Button - Shows Logout if logged in, Get Started if not */}
+        {isLoggedIn ? (
+          <motion.button
+            whileHover={{ 
+              scale: 1.05, 
+              boxShadow: "0 5px 15px rgba(162, 218, 255, 0.4)" 
+            }}
+            whileTap={{ scale: 0.95 }}
+            className="hidden md:block bg-gradient-to-r from-red-400 to-red-500 text-white font-semibold py-1.5 px-4 rounded-full shadow-md transition-all text-sm"
+            onClick={handleLogout}
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+            Logout
+          </motion.button>
+        ) : (
+          <motion.button
+            whileHover={{ 
+              scale: 1.05, 
+              boxShadow: "0 5px 15px rgba(162, 218, 255, 0.4)" 
+            }}
+            whileTap={{ scale: 0.95 }}
+            className="hidden md:block bg-gradient-to-r from-cyan-400 to-blue-500 text-white font-semibold py-1.5 px-4 rounded-full shadow-md transition-all text-sm"
+            onClick={handleGetStarted}
+          >
+            Get Started
+          </motion.button>
+        )}
+
+        {/* Mobile Menu Button - Only shown when logged in */}
+        {isLoggedIn && (
+          <div className="lg:hidden">
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="text-blue-100 hover:text-white focus:outline-none"
             >
-              {mobileMenuOpen ? (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              ) : (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              )}
-            </svg>
-          </button>
-        </div>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                {mobileMenuOpen ? (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                ) : (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                )}
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Mobile Menu */}
-      {mobileMenuOpen && (
+      {/* Mobile Menu - Only shown when logged in */}
+      {isLoggedIn && mobileMenuOpen && (
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
@@ -163,13 +196,13 @@ const Header = () => {
               </Link>
             ))}
             <button 
-              className="bg-gradient-to-r from-cyan-400 to-blue-500 text-blue-900 font-semibold py-2 px-4 rounded-full shadow-md w-full text-base mt-1"
+              className="bg-gradient-to-r from-red-400 to-red-500 text-white font-semibold py-2 px-4 rounded-full shadow-md w-full text-base mt-1"
               onClick={() => {
-                handleGetStarted();
+                handleLogout();
                 setMobileMenuOpen(false);
               }}
             >
-              Get Started
+              Logout
             </button>
           </div>
         </motion.div>

@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import './App.css'
 import AuthPage from './pages/AuthPage'
 import Header from './components/Header'
@@ -18,9 +18,31 @@ import MemberDashboard from './pages/MemberDashboard'
 import MerchantTransaction from './pages/MerchantTransaction'
 import AdminDashboard from './pages/AdminDashboard'
 import RulesPage from './pages/RulesPage'
-import ViewTransaction from './pages/ViewTransaction' 
+import ViewTransaction from './pages/ViewTransaction'
 
- 
+const ProtectedRoute = ({ children, requiredRole = null }) => {
+  const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userRole, setUserRole] = useState(null);
+
+  useEffect(() => {
+    const jwt = localStorage.getItem('jwt');
+    const role = localStorage.getItem('role');
+    
+    if (!jwt || !role) {
+      navigate('/login');
+    } else {
+      setIsAuthenticated(true);
+      setUserRole(role);
+      
+      if (requiredRole && role !== requiredRole) {
+        navigate('/');
+      }
+    }
+  }, [navigate, requiredRole]);
+
+  return isAuthenticated && (!requiredRole || userRole === requiredRole) ? children : null;
+};
 
 function App() {
   return (
@@ -37,29 +59,59 @@ function App() {
               <main>
                 <Routes>
                   <Route path="/" element={<HomePage />} />
-                  <Route path='/admin-dashboard' element={<AdminDashboard/>}/>
+                  <Route path="/admin-dashboard" element={
+                    <ProtectedRoute requiredRole="ADMIN">
+                      <AdminDashboard/>
+                    </ProtectedRoute>
+                  }/>
                   <Route path="/auth" element={<AuthPage />} />
-                  
-                  <Route path="/add-member" element={<AddMember />} />
-                  <Route path="/link-wallet" element={<LinkWallet />} />
+                  <Route path="/add-member" element={
+                    <ProtectedRoute requiredRole="OWNER">
+                      <AddMember />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/link-wallet" element={
+                    <ProtectedRoute requiredRole="OWNER">
+                      <LinkWallet />
+                    </ProtectedRoute>
+                  } />
                   <Route path="/about" element={<AboutUs />} />
                   <Route path="/contact" element={<ContactUs />} />
-                  <Route path="/parent-dashboard" element={<ParentDashboard />} />
-                  <Route path="/member-dashboard" element={<MemberDashboard />} />
-                  <Route path="/merchant-transaction" element={<MerchantTransaction />} />
-                  <Route path="/rules" element={<RulesPage/>}/>
-                  <Route path="/viewtxn" element={<ViewTransaction/>}/>
+                  <Route path="/parent-dashboard" element={
+                    <ProtectedRoute requiredRole="OWNER">
+                      <ParentDashboard />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/member-dashboard" element={
+                    <ProtectedRoute requiredRole="MEMBER">
+                      <MemberDashboard />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/merchant-transaction" element={
+                    <ProtectedRoute>
+                      <MerchantTransaction />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/rules" element={
+                    <ProtectedRoute requiredRole="OWNER">
+                      <RulesPage/>
+                    </ProtectedRoute>
+                  }/>
+                  <Route path="/viewtxn" element={
+                    <ProtectedRoute>
+                      <ViewTransaction/>
+                    </ProtectedRoute>
+                  }/>
                 </Routes>
               </main>
               <Footer />
             </>
           }/>
           
-          
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/aadhar-verification" element={<AadharVerification />} />
-                  <Route path="/otp" element={<Otp />} />
+          <Route path="/otp" element={<Otp />} />
         </Routes>
       </div>
     </Router>

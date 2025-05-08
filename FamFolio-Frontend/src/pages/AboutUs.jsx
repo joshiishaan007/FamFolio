@@ -20,36 +20,37 @@ const AboutUs = () => {
     cta: false,
   })
 
+  // Function to get initials from name
+  const getInitials = (name) => {
+    return name.split(' ').map(part => part[0]).join('').toUpperCase();
+  }
+
   // Team members data
   const teamMembers = [
     {
-      name: "Alex Johnson",
+      name: "Ansh Hathi",
       role: "Full Stack Developer",
-      image: "/placeholder.svg?height=100&width=100",
       linkedin: "https://linkedin.com",
       github: "https://github.com",
       email: "alex@famfolio.com",
     },
     {
-      name: "Sarah Williams",
-      role: "UI/UX Designer",
-      image: "/placeholder.svg?height=100&width=100",
+      name: "Gaurang Agrawal",
+      role: "Full Stack Developer",
       linkedin: "https://linkedin.com",
       github: "https://github.com",
       email: "sarah@famfolio.com",
     },
     {
-      name: "Michael Chen",
-      role: "Backend Engineer",
-      image: "/placeholder.svg?height=100&width=100",
+      name: "Ishaan Joshi",
+      role: "Full Stack Developer",
       linkedin: "https://linkedin.com",
       github: "https://github.com",
       email: "michael@famfolio.com",
     },
     {
-      name: "Priya Patel",
-      role: "Product Manager",
-      image: "/placeholder.svg?height=100&width=100",
+      name: "Yash Gokulgandhi",
+      role: "Full Stack Developer",
       linkedin: "https://linkedin.com",
       github: "https://github.com",
       email: "priya@famfolio.com",
@@ -183,7 +184,7 @@ const AboutUs = () => {
                 <div>
                   <h3 className="text-xl font-semibold text-gray-800 mb-2">The Solution</h3>
                   <p className="text-gray-700">
-                    That's why we built FamFolio in 3 days during the FinTech Hackathon 2023. We wanted to create a
+                    That's why we built FamFolio. We wanted to create a
                     platform that brings transparency to family finances while empowering children to learn about money.
                   </p>
                 </div>
@@ -228,11 +229,9 @@ const AboutUs = () => {
                 className="bg-white rounded-xl shadow-lg overflow-hidden transform transition-all duration-300 hover:-translate-y-2 hover:shadow-xl"
               >
                 <div className="bg-gradient-to-r from-blue-400 to-blue-600 h-20 flex items-center justify-center">
-                  <img
-                    src={member.image || "/placeholder.svg"}
-                    alt={member.name}
-                    className="w-16 h-16 rounded-full border-4 border-white object-cover transform translate-y-8"
-                  />
+                  <div className="w-16 h-16 rounded-full border-4 border-white bg-blue-500 flex items-center justify-center text-white font-bold text-xl transform translate-y-8">
+                    {getInitials(member.name)}
+                  </div>
                 </div>
                 <div className="pt-10 p-4 text-center">
                   <h3 className="text-lg font-bold text-gray-800 mb-1">{member.name}</h3>
@@ -264,28 +263,6 @@ const AboutUs = () => {
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section
-        ref={sectionRefs.cta}
-        className={`py-12 px-6 transition-all duration-1000 ease-out ${
-          visibleSections.cta ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-        }`}
-      >
-        <div className="max-w-6xl mx-auto">
-          <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl shadow-xl p-6 md:p-8 text-center">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">Join us in redefining how families manage money.</h2>
-            <p className="text-blue-100 text-base md:text-lg mb-6 mx-auto max-w-3xl">
-              Start your journey to better family finances today. FamFolio makes it easy to teach your children
-              financial responsibility while maintaining control.
-            </p>
-            <button className="inline-flex items-center bg-white text-blue-600 font-medium px-6 py-2 md:px-8 md:py-3 rounded-lg shadow-md hover:bg-blue-50 transition-colors">
-              Go to Dashboard
-              <ArrowRight className="ml-2" size={18} />
-            </button>
           </div>
         </div>
       </section>

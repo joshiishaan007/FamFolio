@@ -5,6 +5,7 @@ import { motion, useAnimation } from "framer-motion"
 import { useInView } from "react-intersection-observer"
 import Header from "../components/Header"
 import Footer from "../components/Footer"
+import { useNavigate } from "react-router-dom"
 
 const HomePage = () => {
   return (
@@ -32,19 +33,37 @@ const HomePage = () => {
 
 // Hero Section Component
 const HeroSection = () => {
+  const navigate = useNavigate();
+  const isLoggedIn = !!localStorage.getItem('jwt');
+  const userRole = localStorage.getItem('role');
+
+  const handleButtonClick = () => {
+    if (!isLoggedIn) {
+      navigate("/login");
+    } else {
+      if (userRole === "OWNER") {
+        navigate("/parent-dashboard");
+      } else if (userRole === "MEMBER") {
+        navigate("/member-dashboard");
+      } else if (userRole === "ADMIN") {
+        navigate("/admin-dashboard");
+      }
+    }
+  };
+
   return (
     <section className="pt-32 pb-20 px-4 md:px-0">
       <div className="container mx-auto">
         <div className="flex flex-col md:flex-row items-center">
           {/* Left Side - Text Content */}
           <motion.div
-            className="md:w-1/2 mb-10 md:mb-0 md:ml-10 lg:ml-20" // Added left margin here
+            className="md:w-1/2 mb-10 md:mb-0 md:ml-10 lg:ml-20"
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
           >
             <motion.h1
-              className="text-4xl md:text-5xl lg:text-6xl font-bold text-blue-800 mb-6 leading-tight ml-4" // Added left margin
+              className="text-4xl md:text-5xl lg:text-6xl font-bold text-blue-800 mb-6 leading-tight ml-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.8 }}
@@ -52,7 +71,7 @@ const HeroSection = () => {
               Smarter Family Spending Starts Here
             </motion.h1>
             <motion.p
-              className="text-lg lg:text-xl text-blue-700 mb-8 max-w-lg ml-4" // Added left margin
+              className="text-lg lg:text-xl text-blue-700 mb-8 max-w-lg ml-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4, duration: 0.8 }}
@@ -61,7 +80,7 @@ const HeroSection = () => {
               together.
             </motion.p>
             <motion.div
-              className="flex flex-wrap gap-4 ml-4" // Added left margin
+              className="flex flex-wrap gap-4 ml-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.6, duration: 0.8 }}
@@ -70,16 +89,18 @@ const HeroSection = () => {
                 whileHover={{ scale: 1.05, boxShadow: "0 5px 15px rgba(0, 0, 0, 0.1)" }}
                 whileTap={{ scale: 0.95 }}
                 className="bg-gradient-to-r from-blue-500 to-blue-700 text-white font-medium py-3 px-8 rounded-full shadow-md"
+                onClick={handleButtonClick}
               >
-                Get Started
+                {isLoggedIn ? "Explore Dashboard" : "Get Started"}
               </motion.button>
               <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="bg-white text-blue-700 font-medium py-3 px-8 rounded-full shadow-sm border border-blue-200"
-              >
-                Learn More
-              </motion.button>
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      className="bg-white text-blue-700 font-medium py-3 px-8 rounded-full shadow-sm border border-blue-200"
+      onClick={() => navigate("/about")}
+    >
+      Learn More
+    </motion.button>
             </motion.div>
           </motion.div>
 
@@ -162,9 +183,9 @@ const FeaturesSection = () => {
       description: "Get a live breakdown of expenses by category and person. Stay on top of your family's finances.",
     },
     {
-      icon: "🎯",
-      title: "Budget Controls & Alerts",
-      description: "Set monthly/weekly limits for members. Receive instant alerts when budgets are exceeded.",
+      icon: "📏",
+      title: "Custom Family Rules",
+      description: "Parents can define personalized spending rules by amount, category, time, or merchant, ensuring smarter habits.",
     },
     {
       icon: "🔔",
@@ -231,7 +252,7 @@ const AboutSection = () => {
     { icon: "🔒", text: "Bank-Level Security" },
     { icon: "⚡", text: "Real-Time Updates" },
     { icon: "👨‍👩‍👧‍👦", text: "Family First Design" },
-    { icon: "📱", text: "Mobile Friendly" },
+    { icon: "🧠", text: "Smart Spending Rules" },
   ]
 
   return (
@@ -331,6 +352,23 @@ const CTASection = () => {
     threshold: 0.1,
     triggerOnce: true,
   })
+  const navigate = useNavigate();
+  const isLoggedIn = !!localStorage.getItem('jwt');
+  const userRole = localStorage.getItem('role');
+
+  const handleButtonClick = () => {
+    if (!isLoggedIn) {
+      navigate("/login");
+    } else {
+      if (userRole === "OWNER") {
+        navigate("/parent-dashboard");
+      } else if (userRole === "MEMBER") {
+        navigate("/member-dashboard");
+      } else if (userRole === "ADMIN") {
+        navigate("/admin-dashboard");
+      }
+    }
+  };
 
   useEffect(() => {
     if (inView) {
@@ -368,7 +406,7 @@ const CTASection = () => {
               visible: { opacity: 1, y: 0, transition: { delay: 0.2, duration: 0.6 } },
             }}
           >
-            Ready to take control of your family's spending?
+            {isLoggedIn ? "Ready to explore your dashboard?" : "Ready to take control of your family's spending?"}
           </motion.h2>
 
           <motion.p
@@ -378,7 +416,9 @@ const CTASection = () => {
               visible: { opacity: 1, transition: { delay: 0.4, duration: 0.6 } },
             }}
           >
-            Join thousands of families who are already managing their finances smarter with FamFolio.
+            {isLoggedIn 
+              ? "Continue managing your family finances with FamFolio."
+              : "Join thousands of families who are already managing their finances smarter with FamFolio."}
           </motion.p>
 
           <motion.button
@@ -392,8 +432,9 @@ const CTASection = () => {
               hidden: { opacity: 0, scale: 0.8 },
               visible: { opacity: 1, scale: 1, transition: { delay: 0.6, duration: 0.6 } },
             }}
+            onClick={handleButtonClick}
           >
-            Create Your FamFolio Account
+            {isLoggedIn ? "Go to Dashboard" : "Create Your FamFolio Account"}
           </motion.button>
         </motion.div>
       </div>
