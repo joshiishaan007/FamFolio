@@ -17,6 +17,7 @@ import ParentDashboard from './pages/ParentDashboard'
 import MemberDashboard from './pages/MemberDashboard'
 import MerchantTransaction from './pages/MerchantTransaction'
 import AdminDashboard from './pages/AdminDashboard'
+import RulesPage from './pages/RulesPage'
 
 
 function App() {
@@ -41,6 +42,7 @@ function App() {
             <Route path="/parent-dashboard" element={<ParentDashboard />} />
             <Route path="/member-dashboard" element={<MemberDashboard />} />
             <Route path="/merchant-transaction" element={<MerchantTransaction />} />
+            <Route path="/rules" element={<RulesPage/>}/>
           </Routes>
         </main>
         <Footer />
