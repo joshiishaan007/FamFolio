@@ -1,10 +1,7 @@
 package com.example.FamFolio_Backend;
 
 
-import com.example.FamFolio_Backend.Exception.InsufficientBalanceException;
-import com.example.FamFolio_Backend.Exception.PaymentProcessingException;
-import com.example.FamFolio_Backend.Exception.ResourceNotFoundException;
-import com.example.FamFolio_Backend.Exception.UnauthorizedAccessException;
+import com.example.FamFolio_Backend.Exception.*;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.stereotype.Controller;
 
@@ -80,6 +77,42 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneral(Exception ex) {
         return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong: " + ex.getMessage());
+    }
+
+    // Handle Invalid Rule Exception
+    @ExceptionHandler(InvalidRuleException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidRule(InvalidRuleException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, "Invalid rule: " + ex.getMessage());
+    }
+
+    // Handle Payment Not Found Exception
+    @ExceptionHandler(PaymentNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handlePaymentNotFound(PaymentNotFoundException ex) {
+        return buildResponse(HttpStatus.NOT_FOUND, "Payment not found: " + ex.getMessage());
+    }
+
+    // Handle Rule Not Found Exception
+    @ExceptionHandler(RuleNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleRuleNotFound(RuleNotFoundException ex) {
+        return buildResponse(HttpStatus.NOT_FOUND, "Rule not found: " + ex.getMessage());
+    }
+
+    // Handle Rule Violation Exception
+    @ExceptionHandler(RuleViolationException.class)
+    public ResponseEntity<ErrorResponse> handleRuleViolation(RuleViolationException ex) {
+        return buildResponse(HttpStatus.CONFLICT, "Rule violation: " + ex.getMessage());
+    }
+
+    // Handle User Not Found Exception
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUserNotFound(UserNotFoundException ex) {
+        return buildResponse(HttpStatus.NOT_FOUND, "User not found: " + ex.getMessage());
+    }
+
+    // Handle Wallet Not Found Exception
+    @ExceptionHandler(WalletNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleWalletNotFound(WalletNotFoundException ex) {
+        return buildResponse(HttpStatus.NOT_FOUND, "Wallet not found: " + ex.getMessage());
     }
 
     // Utility to build response

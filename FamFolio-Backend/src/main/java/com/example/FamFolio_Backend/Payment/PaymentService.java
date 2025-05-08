@@ -2,7 +2,12 @@ package com.example.FamFolio_Backend.Payment;
 
 import com.example.FamFolio_Backend.Category.Category;
 import com.example.FamFolio_Backend.Category.CategoryRepository;
+import com.example.FamFolio_Backend.Enum.PaymentStatus;
+import com.example.FamFolio_Backend.Enum.TransactionStatus;
 import com.example.FamFolio_Backend.Exception.*;
+import com.example.FamFolio_Backend.Rule.RuleEngine;
+import com.example.FamFolio_Backend.RuleViolation.RuleViolation;
+import com.example.FamFolio_Backend.RuleViolation.RuleViolationRepository;
 import com.example.FamFolio_Backend.Transaction.Transaction;
 import com.example.FamFolio_Backend.Transaction.TransactionService;
 import com.example.FamFolio_Backend.Wallet.Wallet;
@@ -19,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class PaymentService {
@@ -29,6 +35,8 @@ public class PaymentService {
     private final UserService userService;
     private final UserRelationshipService userRelationshipService;
     private final CategoryRepository categoryRepository;
+    private final RuleViolationRepository ruleViolationRepository;
+    private final RuleEngine ruleEngine;
 
     @Autowired
     public PaymentService(PaymentRepository paymentRepository,
@@ -36,13 +44,17 @@ public class PaymentService {
                           TransactionService transactionService,
                           UserService userService,
                           UserRelationshipService userRelationshipService,
-                          CategoryRepository categoryRepository) {
+                          CategoryRepository categoryRepository,
+                          RuleViolationRepository ruleViolationRepository,
+                          RuleEngine ruleEngine) {
         this.paymentRepository = paymentRepository;
         this.walletService = walletService;
         this.transactionService = transactionService;
         this.userService = userService;
         this.userRelationshipService = userRelationshipService;
         this.categoryRepository = categoryRepository;
+        this.ruleViolationRepository = ruleViolationRepository;
+        this.ruleEngine = ruleEngine;
     }
 
     @Transactional
@@ -68,11 +80,6 @@ public class PaymentService {
             throw new PaymentProcessingException("Source wallet is inactive");
         }
 
-        // Check if there's enough balance
-        if (sourceWallet.getBalance().compareTo(paymentRequest.getAmount()) < 0) {
-            throw new InsufficientBalanceException("Insufficient balance in wallet");
-        }
-
         // Create payment record
         Payment payment = new Payment();
         payment.setSourceWallet(sourceWallet);
@@ -82,29 +89,45 @@ public class PaymentService {
         payment.setAmount(paymentRequest.getAmount());
         payment.setPaymentMethod(paymentRequest.getPaymentMethod());
         payment.setPaymentPurpose(paymentRequest.getPaymentPurpose());
-
-        Category category = categoryRepository.findById(paymentRequest.getCategoryId())
-                .orElseThrow(()->new EntityNotFoundException("Category not found"));
-
-        payment.setCategory(category);
         payment.setMerchantName(paymentRequest.getMerchantName());
-        payment.setPaymentStatus("PROCESSING");
         payment.setLocation(paymentRequest.getLocation());
 
+        // Set category if provided
+        if (paymentRequest.getCategoryId() != null) {
+            Category category = categoryRepository.findById(paymentRequest.getCategoryId())
+                    .orElseThrow(() -> new EntityNotFoundException("Category not found"));
+            payment.setCategory(category);
+        }
+
+        // Set initial status
+        payment.setPaymentStatus(PaymentStatus.INITIATED.name());
+
+        // Save payment
         Payment savedPayment = paymentRepository.save(payment);
 
+        // Check if this payment requires rule validation
         try {
+            validatePaymentAgainstRules(savedPayment);
+        } catch (RuleViolationException e) {
+            // If rules are violated, return the payment without further processing
+            // The payment status has already been set to FAILED in validatePaymentAgainstRules
+            return savedPayment;
+        }
+
+        try {
+            // Check if wallet has sufficient balance
+            if (sourceWallet.getBalance().compareTo(payment.getAmount()) < 0) {
+                payment.setPaymentStatus(PaymentStatus.FAILED.name());
+                payment.setFailureReason("Insufficient balance");
+                return paymentRepository.save(payment);
+            }
+
             // Process payment via payment gateway (simulated)
             boolean paymentSuccess = processPaymentGateway(savedPayment);
 
             if (paymentSuccess) {
                 // Update wallet balance
                 walletService.deductAmount(sourceWallet.getId(), paymentRequest.getAmount());
-
-                // Update payment status
-                savedPayment.setPaymentStatus("COMPLETED");
-                savedPayment.setPaymentGatewayReference("PG-" + System.currentTimeMillis());
-                savedPayment.setGatewayResponse("Payment processed successfully");
 
                 // Create transaction record
                 Transaction transaction = transactionService.createTransaction(
@@ -113,15 +136,20 @@ public class PaymentService {
                         savedPayment,
                         paymentRequest.getAmount().negate(),
                         "DEBIT",
-                        category,
+                        payment.getCategory(),
                         paymentRequest.getMerchantName(),
                         paymentRequest.getPaymentPurpose(),
-                        "COMPLETED",
-                        null
+                        TransactionStatus.COMPLETED.name(),
+                        generateUpiReference()
                 );
+
+                // Update payment status
+                savedPayment.setPaymentStatus(PaymentStatus.COMPLETED.name());
+                savedPayment.setPaymentGatewayReference("PG-" + System.currentTimeMillis());
+                savedPayment.setGatewayResponse("Payment processed successfully");
             } else {
                 // Mark payment as failed
-                savedPayment.setPaymentStatus("FAILED");
+                savedPayment.setPaymentStatus(PaymentStatus.FAILED.name());
                 savedPayment.setFailureReason("Payment gateway processing failed");
             }
 
@@ -129,10 +157,52 @@ public class PaymentService {
 
         } catch (Exception e) {
             // Handle payment failure
-            savedPayment.setPaymentStatus("FAILED");
+            savedPayment.setPaymentStatus(PaymentStatus.FAILED.name());
             savedPayment.setFailureReason(e.getMessage());
             paymentRepository.save(savedPayment);
             throw new PaymentProcessingException("Payment processing failed: " + e.getMessage());
+        }
+    }
+
+    private String generateUpiReference() {
+        // Generate a random UPI reference
+        return "UPI" + System.currentTimeMillis() + Math.round(Math.random() * 1000);
+    }
+
+    /**
+     * Validates payment against configured rules.
+     *
+     * @param payment The payment to validate
+     * @throws RuleViolationException if payment violates rules
+     */
+    public void validatePaymentAgainstRules(Payment payment) {
+        User user = payment.getInitiatedBy();
+
+        // Check if user is a member (rules only apply to members)
+        if (user.getRole().equals("MEMBER")) {
+            // Get user's owner
+            User owner = userRelationshipService.getOwnerForMember(user.getId());
+
+            if (owner != null) {
+                // Evaluate payment against applicable rules
+                List<RuleViolation> violations = ruleEngine.evaluatePayment(payment, owner.getId(), user.getId());
+
+                if (!violations.isEmpty()) {
+                    // Save rule violations
+                    for (RuleViolation violation : violations) {
+//                        violation.setPayment(payment); // Associate violation with payment
+                        ruleViolationRepository.save(violation);
+                    }
+
+                    // Update payment status to FAILED
+                    payment.setPaymentStatus(PaymentStatus.FAILED.name());
+                    payment.setFailureReason("Payment violates rules set by the owner");
+                    paymentRepository.save(payment);
+
+                    // Throw exception to prevent further processing
+                    throw new RuleViolationException("Payment violates rules set by the owner");
+                }
+            }
         }
     }
 
@@ -180,6 +250,14 @@ public class PaymentService {
         payment.setPaymentStatus("PROCESSING");
 
         Payment savedPayment = paymentRepository.save(payment);
+
+        // Check if this payment requires rule validation
+        try {
+            validatePaymentAgainstRules(savedPayment);
+        } catch (RuleViolationException e) {
+            // If rules are violated, return the payment without further processing
+            return savedPayment;
+        }
 
         try {
             // Deduct from source wallet

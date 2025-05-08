@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.example.FamFolio_Backend.user.User;
@@ -20,4 +22,7 @@ public interface UserRelationshipRepository extends JpaRepository<UserRelationsh
     boolean existsByOwnerAndMember(User owner, User member);
 
     boolean existsByOwner_IdAndMember_Id(Long ownerId, Long memberId);
+
+    @Query("SELECT ur.owner FROM UserRelationship ur WHERE ur.member.id = :memberId")
+    User findOwnerByMemberId(@Param("memberId") Long memberId);
 }

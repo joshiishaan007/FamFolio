@@ -98,4 +98,8 @@ public class UserRelationshipService {
         }
         userRelationshipRepository.deleteById(relationshipId);
     }
+
+    public User getOwnerForMember(Long id) {
+        return userRelationshipRepository.findOwnerByMemberId(id);
+    }
 }
