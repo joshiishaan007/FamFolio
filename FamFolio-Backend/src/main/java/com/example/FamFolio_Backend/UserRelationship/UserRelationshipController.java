@@ -73,6 +73,21 @@ public class UserRelationshipController {
         }
     }
 
+    @GetMapping("/membersname/{ownerusername}") //for getting all wallets
+    public List<Long> getIdByOwnerUsername(@PathVariable String ownerusername) {
+
+        List<UserRelationship> users=userRelationshipService.getRelationshipsByOwner(ownerusername);
+        List<User> userList= users.stream().map(uu->userService.findByUsername(uu.getMember().getUsername()))
+                .collect(Collectors.toList());
+         List<Long> membersId=userList.stream().map(u->u.getId()).collect(Collectors.toList());
+
+
+        return membersId;
+
+
+    }
+
+
     @GetMapping("/memberwallets/{ownerusername}") //for getting all wallets
     public List<Wallet> getWalletByOwnerUsername(@PathVariable String ownerusername) {
 

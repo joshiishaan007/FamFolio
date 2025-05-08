@@ -102,28 +102,9 @@ public class TransactionService {
 //        return transactionRepository.findByWalletId(walletId, pageable);
 //    }
 
-    public Transaction getTransactionById(Long transactionId) {
-        Transaction transaction = transactionRepository.findById(transactionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
-
-        // Get current user
-        User currentUser = getCurrentUser();
-
-        // Check if user owns this transaction
-        if (transaction.getUser().getId().equals(currentUser.getId())) {
-            return transaction;
-        }
-
-        // If OWNER role, check if they have access to this member's transactions
-        if ("OWNER".equals(currentUser.getRole())) {
-            boolean hasAccess = userRelationshipService.checkOwnerHasAccessToMember(
-                    currentUser.getId(), transaction.getUser().getId());
-            if (hasAccess) {
-                return transaction;
-            }
-        }
-
-        throw new UnauthorizedAccessException("You don't have access to this transaction");
+    public List<Transaction> getTransactionById(Long userId) {
+        List<Transaction> transactions = transactionRepository.findByUser_Id(userId);
+        return transactions;
     }
 
     private User getCurrentUser() {
