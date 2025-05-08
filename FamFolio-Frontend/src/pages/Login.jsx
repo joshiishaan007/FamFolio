@@ -84,6 +84,7 @@ const Login = () => {
       // Store user data in localStorage
       localStorage.setItem("username", data.user.username);
       localStorage.setItem("jwt", data.token);
+      localStorage.setItem("role",data.user.role)
       
 
       // Redirect to home page

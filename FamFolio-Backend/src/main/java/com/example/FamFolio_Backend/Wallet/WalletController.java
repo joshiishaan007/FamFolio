@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/wallets")
@@ -34,9 +35,19 @@ public class WalletController {
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<Wallet> getWalletByUserId(@PathVariable Long userId) {
+
         Wallet wallet = walletService.getWalletByUserId(userId);
         return ResponseEntity.ok(wallet);
     }
+
+
+    @GetMapping("/user/username/{username}")
+    public ResponseEntity<Wallet> getWalletByUserName(@PathVariable String username) {
+        User user = userRepository.findByUsername(username).get();
+        Wallet wallet = walletService.getWalletByUserId(user.getId());
+        return ResponseEntity.ok(wallet);
+    }
+
 
     @PutMapping("/update-balance/{username}")
     public ResponseEntity<Wallet> updateWalletBalance(
