@@ -97,7 +97,7 @@ const Login = () => {
   };
 
   const navigateToRegister = () => {
-    navigate("/register");
+    navigate("/aadhar-verification");
   };
 
   return (

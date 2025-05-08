@@ -26,6 +26,9 @@ function App() {
   return (
     <Router>
       <div className="app-container bg-gradient-to-br from-blue-50">
+        <br/>
+        <br/>
+        <br/>
         <Routes>
           {/* Routes with Header and Footer */}
           <Route path="/*" element={
@@ -36,8 +39,7 @@ function App() {
                   <Route path="/" element={<HomePage />} />
                   <Route path='/admin-dashboard' element={<AdminDashboard/>}/>
                   <Route path="/auth" element={<AuthPage />} />
-                  <Route path="/aadhar-verification" element={<AadharVerification />} />
-                  <Route path="/otp" element={<Otp />} />
+                  
                   <Route path="/add-member" element={<AddMember />} />
                   <Route path="/link-wallet" element={<LinkWallet />} />
                   <Route path="/about" element={<AboutUs />} />
@@ -56,6 +58,8 @@ function App() {
           
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/aadhar-verification" element={<AadharVerification />} />
+                  <Route path="/otp" element={<Otp />} />
         </Routes>
       </div>
     </Router>
