@@ -13,6 +13,8 @@ import com.example.FamFolio_Backend.Transaction.TransactionService;
 import com.example.FamFolio_Backend.Wallet.Wallet;
 import com.example.FamFolio_Backend.Wallet.WalletService;
 import com.example.FamFolio_Backend.user.User;
+import com.example.FamFolio_Backend.user.UserRepository;
+import com.example.FamFolio_Backend.user.UserResponseDTO;
 import com.example.FamFolio_Backend.user.UserService;
 import com.example.FamFolio_Backend.UserRelationship.UserRelationshipService;
 import jakarta.persistence.EntityNotFoundException;
@@ -29,6 +31,7 @@ import java.util.List;
 @Service
 public class PaymentService {
 
+    private final UserRepository userRepository;
     private final PaymentRepository paymentRepository;
     private final WalletService walletService;
     private final TransactionService transactionService;
@@ -46,7 +49,8 @@ public class PaymentService {
                           UserRelationshipService userRelationshipService,
                           CategoryRepository categoryRepository,
                           RuleViolationRepository ruleViolationRepository,
-                          RuleEngine ruleEngine) {
+                          RuleEngine ruleEngine,
+                          UserRepository userRepository) {
         this.paymentRepository = paymentRepository;
         this.walletService = walletService;
         this.transactionService = transactionService;
@@ -55,18 +59,23 @@ public class PaymentService {
         this.categoryRepository = categoryRepository;
         this.ruleViolationRepository = ruleViolationRepository;
         this.ruleEngine = ruleEngine;
+        this.userRepository = userRepository;
     }
 
     @Transactional
     public Payment processExternalPayment(PaymentRequestDTO paymentRequest) {
         // Get current authenticated user
         User currentUser = getCurrentUser();
+        User user;
 
         // Determine the source wallet based on request
         Wallet sourceWallet;
-        if (paymentRequest.getSourceWalletId() != null) {
+
+        if (paymentRequest.getUsername() != null) {
             // If source wallet ID is provided, check access
-            sourceWallet = walletService.getWalletById(paymentRequest.getSourceWalletId());
+
+            user=userService.findByUsername(paymentRequest.getUsername()).get();
+            sourceWallet = user.getWallets();
 
             // Check if user can use this wallet
             verifyWalletAccess(currentUser, sourceWallet);
@@ -78,6 +87,11 @@ public class PaymentService {
         // Check if wallet is active
         if (!sourceWallet.getIsActive()) {
             throw new PaymentProcessingException("Source wallet is inactive");
+        }
+
+        // Check if there's enough balance
+        if (sourceWallet.getBalance().compareTo(paymentRequest.getAmount()) < 0) {
+            throw new InsufficientBalanceException("Insufficient balance in wallet");
         }
 
         // Create payment record
@@ -210,11 +224,14 @@ public class PaymentService {
     public Payment processInternalTransfer(InternalTransferRequest transferRequest) {
         // Get current authenticated user
         User currentUser = getCurrentUser();
+        User owner,member;
 
         // Get source wallet (sender)
-        Wallet sourceWallet;
-        if (transferRequest.getSourceWalletId() != null) {
-            sourceWallet = walletService.getWalletById(transferRequest.getSourceWalletId());
+        Wallet sourceWallet,destinationWallet;
+        if (transferRequest.getOwnername() != null) {
+            owner=userRepository.findByUsername(transferRequest.getOwnername()).get();
+
+            sourceWallet = owner.getWallets();
             // Verify user can access this wallet
             verifyWalletAccess(currentUser, sourceWallet);
         } else {
@@ -222,9 +239,11 @@ public class PaymentService {
         }
 
         // Get destination wallet by UPI ID
-        Wallet destinationWallet = walletService.getWalletByUpiId(transferRequest.getDestinationUpiId());
+        member=userRepository.findByUsername(transferRequest.getMembername()).get();
+        destinationWallet=member.getWallets();
+
         if (destinationWallet == null) {
-            throw new ResourceNotFoundException("Destination wallet not found with UPI ID: " + transferRequest.getDestinationUpiId());
+            throw new ResourceNotFoundException("Destination wallet not found with UPI ID: " + destinationWallet.getUpiId());
         }
 
         // Check wallet status
@@ -241,12 +260,12 @@ public class PaymentService {
         Payment payment = new Payment();
         payment.setSourceWallet(sourceWallet);
         payment.setDestinationType("WALLET");
-        payment.setDestinationIdentifier(transferRequest.getDestinationUpiId());
+        payment.setDestinationIdentifier(destinationWallet.getUpiId());
         payment.setInitiatedBy(currentUser);
         payment.setAmount(transferRequest.getAmount());
         payment.setPaymentMethod("UPI_TRANSFER");
-        payment.setPaymentPurpose(transferRequest.getPurpose());
-        payment.setCategory(transferRequest.getCategory());
+        payment.setPaymentPurpose("Transfered to member ny owner");
+        payment.setCategory(null);
         payment.setPaymentStatus("PROCESSING");
 
         Payment savedPayment = paymentRepository.save(payment);
@@ -277,7 +296,7 @@ public class PaymentService {
                     savedPayment,
                     transferRequest.getAmount().negate(),
                     "DEBIT",
-                    transferRequest.getCategory(),
+                    null,
                     null,
                     "Transfer to " + destinationWallet.getUpiId(),
                     "COMPLETED",
@@ -291,7 +310,7 @@ public class PaymentService {
                     savedPayment,
                     transferRequest.getAmount(),
                     "CREDIT",
-                    transferRequest.getCategory(),
+                    null,
                     null,
                     "Transfer from " + sourceWallet.getUpiId(),
                     "COMPLETED",

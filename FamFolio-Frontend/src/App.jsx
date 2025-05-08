@@ -26,7 +26,9 @@ function App() {
        
         <main>
           <Routes>
+            
             <Route path="/" element={<HomePage />} />
+            <Route path='/admin-dashboard' element={<AdminDashboard/>}/>
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/aadhar-verification" element={<AadharVerification />} />
             <Route path="/otp" element={<Otp />} />
