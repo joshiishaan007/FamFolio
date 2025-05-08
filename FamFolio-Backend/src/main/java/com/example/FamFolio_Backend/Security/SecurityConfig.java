@@ -40,7 +40,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Enable CORS with custom configuration
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/aadhaar/validateOtp","/api/aadhaar/verify").permitAll()
-                        .requestMatchers("/api/rules","/api/transaction_approval/{username}").hasRole("OWNER")
+                        .requestMatchers("/api/rules","/api/transaction_approval/{username}","/api/relationships/family/{username}").hasRole("OWNER")
                         .requestMatchers("/api/payments/external","/api/payments/transfer").hasAnyRole("OWNER","MEMBER")
                         .requestMatchers("/api/users/register/{ownerUsername}","/api/wallets/update-balance/{userId}").hasRole("OWNER")
                         .requestMatchers("/api/users/register/**", "/api/users/login","/api/users/register/{regi}","/api/wallets/update-balance/{userId}").permitAll() // Allow public access to register and login

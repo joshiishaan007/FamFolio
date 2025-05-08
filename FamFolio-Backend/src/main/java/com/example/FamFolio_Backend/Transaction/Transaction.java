@@ -12,6 +12,7 @@ import com.example.FamFolio_Backend.RuleViolation.RuleViolation;
 import com.example.FamFolio_Backend.Wallet.Wallet;
 import com.example.FamFolio_Backend.user.User;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -26,6 +27,7 @@ public class Transaction {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "wallet_id", nullable = false)
+    @JsonBackReference
     private Wallet wallet;
 
     @ManyToOne(fetch = FetchType.LAZY)

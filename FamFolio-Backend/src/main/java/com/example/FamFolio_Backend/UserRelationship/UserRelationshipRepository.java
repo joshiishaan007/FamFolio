@@ -27,4 +27,7 @@ public interface UserRelationshipRepository extends JpaRepository<UserRelationsh
 
     @Query("SELECT ur.owner FROM UserRelationship ur WHERE ur.member.id = :memberId")
     User findOwnerByMemberId(@Param("memberId") Long memberId);
+
+    @Query("SELECT ur.member FROM UserRelationship ur WHERE ur.owner = :owner")
+    List<User> findMembersByOwner(@Param("owner") User owner);
 }

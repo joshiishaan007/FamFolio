@@ -4,10 +4,16 @@ package com.example.FamFolio_Backend.UserRelationship;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import com.example.FamFolio_Backend.user.User;
 
+import com.example.FamFolio_Backend.Wallet.Wallet;
+import com.example.FamFolio_Backend.user.UserResponseDTO;
+import com.example.FamFolio_Backend.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,10 +27,18 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserRelationshipController {
 
     private final UserRelationshipService userRelationshipService;
+    private final UserService userService;
 
     @Autowired
-    public UserRelationshipController(UserRelationshipService userRelationshipService) {
+    public UserRelationshipController(UserRelationshipService userRelationshipService, UserService userService) {
         this.userRelationshipService = userRelationshipService;
+        this.userService = userService;
+    }
+
+    @GetMapping("/family/{username}")
+    @PreAuthorize("hasRole('OWNER')")
+    public List<String> getAllFamilyMembers(@PathVariable String username){
+        return userRelationshipService.getFamilyMembers(username);
     }
 
     
@@ -53,7 +67,7 @@ public class UserRelationshipController {
      * @param username The username of the owner
      * @return List of relationships
      */
-    @GetMapping("/owner/{username}")
+    @GetMapping("owner/{username}")
     public ResponseEntity<?> getRelationshipsByOwner(@PathVariable String username) {
         try {
             List<UserRelationship> relationships = userRelationshipService.getRelationshipsByOwner(username);
@@ -64,6 +78,21 @@ public class UserRelationshipController {
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
+    }
+
+    @GetMapping("/memberwallets/{ownerusername}") //for getting all wallets
+    public List<Wallet> getWalletByOwnerUsername(@PathVariable String ownerusername) {
+
+      List<UserRelationship> users=userRelationshipService.getRelationshipsByOwner(ownerusername);
+       List<User> userList= users.stream().map(uu->userService.findByUsername(uu.getMember().getUsername()))
+               .collect(Collectors.toList());
+
+       List<Wallet> wallets=userList.stream().map(ul->ul.getWallets())
+               .collect(Collectors.toList());
+
+       return wallets;
+
+
     }
 
     /**

@@ -10,9 +10,9 @@ import java.util.List;
 
 public class RuleCreateRequest {
     @NotNull(message = "Owner ID is required")
-    private Long ownerId;
+    private String owner;
 
-    private Long memberId; // Optional - null means applies to all members
+    private String member; // Optional - null means applies to all members
 
     @NotBlank(message = "Rule name is required")
     private String ruleName;
@@ -29,20 +29,20 @@ public class RuleCreateRequest {
     public RuleCreateRequest() {
     }
 
-    public Long getOwnerId() {
-        return ownerId;
+    public String getOwner() {
+        return owner;
     }
 
-    public void setOwnerId(Long ownerId) {
-        this.ownerId = ownerId;
+    public void setOwner(String owner) {
+        this.owner = owner;
     }
 
-    public Long getMemberId() {
-        return memberId;
+    public String getMember() {
+        return member;
     }
 
-    public void setMemberId(Long memberId) {
-        this.memberId = memberId;
+    public void setMember(String member) {
+        this.member = member;
     }
 
     public String getRuleName() {

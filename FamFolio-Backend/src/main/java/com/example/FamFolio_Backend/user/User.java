@@ -70,12 +70,15 @@ public class User {
     private Set<UserRelationship> ownedRelationships = new HashSet<>();
     
     @OneToMany(mappedBy = "member")
+    @JsonIgnore
     private Set<UserRelationship> memberRelationships = new HashSet<>();
     
     @OneToMany(mappedBy = "initiatedBy")
+    @JsonIgnore
     private Set<Payment> initiatedPayments = new HashSet<>();
     
     @OneToMany(mappedBy = "user")
+    @JsonIgnore
     private Set<Transaction> transactions = new HashSet<>();
 
     public void setWallets(Wallet wallets) {
