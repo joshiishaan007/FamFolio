@@ -34,7 +34,7 @@ public class Wallet {
     
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false)
-    
+    @JsonIgnore
     private User user;
     
     @Column(name = "balance", nullable = false, precision = 19, scale = 4)
