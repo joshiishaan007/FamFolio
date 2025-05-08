@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Header = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -32,6 +33,10 @@ const Header = () => {
     { name: "About Us", path: "/about" },
     { name: "Contact Us", path: "/contact" }
   ];
+
+  const handleGetStarted = () => {
+    navigate("/login");
+  };
 
   return (
     <motion.header
@@ -100,6 +105,7 @@ const Header = () => {
           }}
           whileTap={{ scale: 0.95 }}
           className="hidden md:block bg-gradient-to-r from-cyan-400 to-blue-500 text-white font-semibold py-1.5 px-4 rounded-full shadow-md transition-all text-sm"
+          onClick={handleGetStarted}
         >
           Get Started
         </motion.button>
@@ -156,7 +162,13 @@ const Header = () => {
                 {item.name}
               </Link>
             ))}
-            <button className="bg-gradient-to-r from-cyan-400 to-blue-500 text-blue-900 font-semibold py-2 px-4 rounded-full shadow-md w-full text-base mt-1">
+            <button 
+              className="bg-gradient-to-r from-cyan-400 to-blue-500 text-blue-900 font-semibold py-2 px-4 rounded-full shadow-md w-full text-base mt-1"
+              onClick={() => {
+                handleGetStarted();
+                setMobileMenuOpen(false);
+              }}
+            >
               Get Started
             </button>
           </div>

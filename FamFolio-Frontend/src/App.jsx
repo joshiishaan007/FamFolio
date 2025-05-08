@@ -18,42 +18,45 @@ import MemberDashboard from './pages/MemberDashboard'
 import MerchantTransaction from './pages/MerchantTransaction'
 import AdminDashboard from './pages/AdminDashboard'
 import RulesPage from './pages/RulesPage'
-import ViewTransaction from './pages/ViewTransaction'
+import ViewTransaction from './pages/ViewTransaction' 
 
+ 
 
 function App() {
   return (
     <Router>
       <div className="app-container bg-gradient-to-br from-blue-50">
-        <Header/>
-        
-        <br/>
-        
-        <br/>
-        <br/>
-       
-        <main>
-          <Routes>
-            
-            <Route path="/" element={<HomePage />} />
-            <Route path='/admin-dashboard' element={<AdminDashboard/>}/>
-            <Route path="/auth" element={<AuthPage />} />
-            <Route path="/aadhar-verification" element={<AadharVerification />} />
-            <Route path="/otp" element={<Otp />} />
-            <Route path="/add-member" element={<AddMember />} />
-            <Route path="/link-wallet" element={<LinkWallet />} />
-            <Route path="/about" element={<AboutUs />} />
-            <Route path="/contact" element={<ContactUs />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/parent-dashboard" element={<ParentDashboard />} />
-            <Route path="/member-dashboard" element={<MemberDashboard />} />
-            <Route path="/merchant-transaction" element={<MerchantTransaction />} />
-            <Route path="/rules" element={<RulesPage/>}/>
-            <Route path="/viewtxn" element={<ViewTransaction/>}/>
-          </Routes>
-        </main>
-        <Footer />
+        <Routes>
+          {/* Routes with Header and Footer */}
+          <Route path="/*" element={
+            <>
+              <Header/>
+              <main>
+                <Routes>
+                  <Route path="/" element={<HomePage />} />
+                  <Route path='/admin-dashboard' element={<AdminDashboard/>}/>
+                  <Route path="/auth" element={<AuthPage />} />
+                  <Route path="/aadhar-verification" element={<AadharVerification />} />
+                  <Route path="/otp" element={<Otp />} />
+                  <Route path="/add-member" element={<AddMember />} />
+                  <Route path="/link-wallet" element={<LinkWallet />} />
+                  <Route path="/about" element={<AboutUs />} />
+                  <Route path="/contact" element={<ContactUs />} />
+                  <Route path="/parent-dashboard" element={<ParentDashboard />} />
+                  <Route path="/member-dashboard" element={<MemberDashboard />} />
+                  <Route path="/merchant-transaction" element={<MerchantTransaction />} />
+                  <Route path="/rules" element={<RulesPage/>}/>
+                  <Route path="/viewtxn" element={<ViewTransaction/>}/>
+                </Routes>
+              </main>
+              <Footer />
+            </>
+          }/>
+          
+          
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+        </Routes>
       </div>
     </Router>
   )
