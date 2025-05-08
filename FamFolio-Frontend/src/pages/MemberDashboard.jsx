@@ -24,8 +24,10 @@ const MemberDashboard = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [activeTipIndex, setActiveTipIndex] = useState(0)
   const [walletData, setWalletData] = useState(null)
+  const [transactions, setTransactions] = useState([])
+  const [showAllTransactions, setShowAllTransactions] = useState(false)
 
-  const itemsPerPage = 4
+  const itemsPerPage = 5
 
   useEffect(() => {
     const loadData = async () => {
@@ -39,7 +41,7 @@ const MemberDashboard = () => {
         }
 
         // Fetch wallet data
-        const response = await axios.get(
+        const walletResponse = await axios.get(
           `http://localhost:8080/api/wallets/user/username/${username}`,
           {
             headers: {
@@ -48,8 +50,37 @@ const MemberDashboard = () => {
           }
         )
 
-        const wallet = response.data
+        // Fetch transactions
+        const transactionsResponse = await axios.get(
+          `http://localhost:8080/api/transactions/user/${username}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        )
+
+        const wallet = walletResponse.data
         setWalletData(wallet)
+
+        // Filter only DEBIT transactions and format them
+        const debitTransactions = transactionsResponse.data
+          .filter(tx => tx.transactionType === "DEBIT")
+          .map(tx => ({
+            id: tx.id,
+            amount: Math.abs(tx.amount), // Convert to positive since we know it's DEBIT
+            description: tx.description,
+            date: new Date(tx.createdAt).toLocaleDateString("en-IN", {
+              day: "numeric",
+              month: "short",
+              year: "numeric"
+            }),
+            merchantName: tx.merchantName,
+            createdAt: tx.createdAt
+          }))
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) // Sort by date newest first
+
+        setTransactions(debitTransactions)
 
         // Mock data for other parts of the dashboard
         // (You'll want to replace this with actual API calls)
@@ -58,72 +89,6 @@ const MemberDashboard = () => {
           walletBalance: wallet.balance - wallet.spent,
           walletLimit: wallet.balance,
           notifications: 2,
-          transactions: [
-            {
-              id: 1,
-              category: "food",
-              description: "Zomato Order",
-              amount: 450,
-              date: "2023-05-06",
-              icon: <Coffee size={16} />,
-            },
-            {
-              id: 2,
-              category: "education",
-              description: "Coursera Subscription",
-              amount: 1200,
-              date: "2023-05-05",
-              icon: <Book size={16} />,
-            },
-            {
-              id: 3,
-              category: "games",
-              description: "Steam Purchase",
-              amount: 899,
-              date: "2023-05-04",
-              icon: <Gamepad size={16} />,
-            },
-            {
-              id: 4,
-              category: "food",
-              description: "Swiggy Order",
-              amount: 350,
-              date: "2023-05-03",
-              icon: <Coffee size={16} />,
-            },
-            {
-              id: 5,
-              category: "shopping",
-              description: "Amazon Purchase",
-              amount: 1500,
-              date: "2023-05-02",
-              icon: <ShoppingBag size={16} />,
-            },
-            {
-              id: 6,
-              category: "gift",
-              description: "Birthday Gift",
-              amount: 800,
-              date: "2023-05-01",
-              icon: <Gift size={16} />,
-            },
-            {
-              id: 7,
-              category: "food",
-              description: "McDonald's",
-              amount: 250,
-              date: "2023-04-30",
-              icon: <Coffee size={16} />,
-            },
-            {
-              id: 8,
-              category: "education",
-              description: "Book Purchase",
-              amount: 550,
-              date: "2023-04-29",
-              icon: <Book size={16} />,
-            },
-          ],
           categorySpending: [
             { name: "Food", value: 1050, color: "#38bdf8" },
             { name: "Education", value: 1750, color: "#818cf8" },
@@ -192,12 +157,9 @@ const MemberDashboard = () => {
     )
   }
 
-  // Calculate pagination
-  const totalPages = Math.ceil(memberData.transactions.length / itemsPerPage)
-  const paginatedTransactions = memberData.transactions.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage,
-  )
+  // Get the most recent transactions (already sorted by date)
+  const recentTransactions = transactions.slice(0, itemsPerPage)
+  const allTransactions = transactions
 
   // Calculate total spent
   const totalSpent = memberData.categorySpending.reduce((sum, category) => sum + category.value, 0)
@@ -232,6 +194,26 @@ const MemberDashboard = () => {
     month: "long",
     day: "numeric",
   })
+
+  // Get icon based on transaction description
+  const getTransactionIcon = (description) => {
+    if (description.toLowerCase().includes("food")) {
+      return <Coffee size={16} />
+    } else if (description.toLowerCase().includes("transfer")) {
+      return <DollarSign size={16} />
+    } else if (description.toLowerCase().includes("education") || description.toLowerCase().includes("book")) {
+      return <Book size={16} />
+    } else if (description.toLowerCase().includes("movie") || description.toLowerCase().includes("game")) {
+      return <Gamepad size={16} />
+    } else if (description.toLowerCase().includes("shopping")) {
+      return <ShoppingBag size={16} />
+    } else if (description.toLowerCase().includes("gift")) {
+      return <Gift size={16} />
+    } else if (description.toLowerCase().includes("transport")) {
+      return <PlusCircle size={16} />
+    }
+    return <DollarSign size={16} />
+  }
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 to-white p-4 md:p-6">
@@ -328,50 +310,43 @@ const MemberDashboard = () => {
           {/* Transaction History Section */}
           <motion.div variants={itemVariants} className="flex flex-col rounded-2xl bg-white p-5 shadow-lg">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-gray-800">Transaction History</h2>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-blue-700 transition-colors hover:bg-blue-100 disabled:text-gray-300 disabled:hover:bg-transparent"
+              <h2 className="text-lg font-bold text-gray-800">Recent Transactions</h2>
+              {transactions.length > itemsPerPage && (
+                <button 
+                  onClick={() => setShowAllTransactions(true)}
+                  className="text-sm text-blue-600 hover:underline"
                 >
-                  <ChevronLeft size={18} />
+                  View All
                 </button>
-                <span className="text-sm text-gray-600">
-                  {currentPage} / {totalPages}
-                </span>
-                <button
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-blue-700 transition-colors hover:bg-blue-100 disabled:text-gray-300 disabled:hover:bg-transparent"
-                >
-                  <ChevronRight size={18} />
-                </button>
-              </div>
+              )}
             </div>
 
             <div className="flex flex-col gap-3">
-              {paginatedTransactions.map((transaction, index) => (
-                <motion.div
-                  key={transaction.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  whileHover={{ scale: 1.02, backgroundColor: "rgba(239, 246, 255, 0.6)" }}
-                  className="flex items-center gap-3 rounded-lg border border-gray-100 p-3"
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
-                    {transaction.icon}
-                  </div>
+              {recentTransactions.length > 0 ? (
+                recentTransactions.map((transaction, index) => (
+                  <motion.div
+                    key={transaction.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    whileHover={{ scale: 1.02, backgroundColor: "rgba(239, 246, 255, 0.6)" }}
+                    className="flex items-center gap-3 rounded-lg border border-gray-100 p-3"
+                  >
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                      {getTransactionIcon(transaction.description)}
+                    </div>
 
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-800">{transaction.description}</p>
-                    <p className="text-xs text-gray-500">{transaction.date}</p>
-                  </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-800">{transaction.description}</p>
+                      <p className="text-xs text-gray-500">{transaction.date}</p>
+                    </div>
 
-                  <p className="font-medium text-red-600">-₹{transaction.amount}</p>
-                </motion.div>
-              ))}
+                    <p className="font-medium text-red-600">-₹{transaction.amount.toFixed(2)}</p>
+                  </motion.div>
+                ))
+              ) : (
+                <p className="text-center text-gray-500 py-4">No transactions found</p>
+              )}
             </div>
           </motion.div>
 
@@ -452,6 +427,58 @@ const MemberDashboard = () => {
           </div>
         </div>
       </motion.div>
+
+      {/* All Transactions Modal */}
+      {showAllTransactions && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="relative max-h-[90vh] w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl"
+          >
+            <button 
+              onClick={() => setShowAllTransactions(false)}
+              className="absolute right-4 top-4 rounded-full p-1 text-gray-500 hover:bg-gray-100"
+            >
+              <X size={24} />
+            </button>
+
+            <h2 className="mb-4 text-xl font-bold text-gray-800">All Transactions</h2>
+            
+            <div className="max-h-[70vh] overflow-y-auto pr-2">
+              <div className="flex flex-col gap-3">
+                {allTransactions.length > 0 ? (
+                  allTransactions.map((transaction) => (
+                    <motion.div
+                      key={transaction.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-center gap-3 rounded-lg border border-gray-100 p-3 hover:bg-blue-50"
+                    >
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                        {getTransactionIcon(transaction.description)}
+                      </div>
+
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-800">{transaction.description}</p>
+                        <p className="text-xs text-gray-500">{transaction.date}</p>
+                        {transaction.merchantName && (
+                          <p className="text-xs text-gray-500">Merchant: {transaction.merchantName}</p>
+                        )}
+                      </div>
+
+                      <p className="font-medium text-red-600">-₹{transaction.amount.toFixed(2)}</p>
+                    </motion.div>
+                  ))
+                ) : (
+                  <p className="text-center text-gray-500 py-4">No transactions found</p>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   )
 }
