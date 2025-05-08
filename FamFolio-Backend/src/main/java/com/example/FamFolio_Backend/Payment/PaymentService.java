@@ -5,16 +5,18 @@ import com.example.FamFolio_Backend.Category.CategoryRepository;
 import com.example.FamFolio_Backend.Enum.PaymentStatus;
 import com.example.FamFolio_Backend.Enum.TransactionStatus;
 import com.example.FamFolio_Backend.Exception.*;
+import com.example.FamFolio_Backend.Notification.NotificationService;
 import com.example.FamFolio_Backend.Rule.RuleEngine;
+import com.example.FamFolio_Backend.RuleAction.RuleAction;
 import com.example.FamFolio_Backend.RuleViolation.RuleViolation;
 import com.example.FamFolio_Backend.RuleViolation.RuleViolationRepository;
 import com.example.FamFolio_Backend.Transaction.Transaction;
 import com.example.FamFolio_Backend.Transaction.TransactionService;
+import com.example.FamFolio_Backend.TransactionApproval.TransactionApprovalService;
 import com.example.FamFolio_Backend.Wallet.Wallet;
 import com.example.FamFolio_Backend.Wallet.WalletService;
 import com.example.FamFolio_Backend.user.User;
 import com.example.FamFolio_Backend.user.UserRepository;
-import com.example.FamFolio_Backend.user.UserResponseDTO;
 import com.example.FamFolio_Backend.user.UserService;
 import com.example.FamFolio_Backend.UserRelationship.UserRelationshipService;
 import jakarta.persistence.EntityNotFoundException;
@@ -24,9 +26,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class PaymentService {
@@ -40,6 +41,8 @@ public class PaymentService {
     private final CategoryRepository categoryRepository;
     private final RuleViolationRepository ruleViolationRepository;
     private final RuleEngine ruleEngine;
+    private final TransactionApprovalService transactionApprovalService;
+    private final NotificationService notificationService;
 
     @Autowired
     public PaymentService(PaymentRepository paymentRepository,
@@ -50,7 +53,9 @@ public class PaymentService {
                           CategoryRepository categoryRepository,
                           RuleViolationRepository ruleViolationRepository,
                           RuleEngine ruleEngine,
-                          UserRepository userRepository) {
+                          UserRepository userRepository,
+                          TransactionApprovalService transactionApprovalService,
+                          NotificationService notificationService) {
         this.paymentRepository = paymentRepository;
         this.walletService = walletService;
         this.transactionService = transactionService;
@@ -60,6 +65,8 @@ public class PaymentService {
         this.ruleViolationRepository = ruleViolationRepository;
         this.ruleEngine = ruleEngine;
         this.userRepository = userRepository;
+        this.transactionApprovalService = transactionApprovalService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -74,7 +81,7 @@ public class PaymentService {
         if (paymentRequest.getUsername() != null) {
             // If source wallet ID is provided, check access
 
-            user=userService.findByUsername(paymentRequest.getUsername()).get();
+            user=userService.findByUsername(paymentRequest.getUsername());
             sourceWallet = user.getWallets();
 
             // Check if user can use this wallet
@@ -203,22 +210,54 @@ public class PaymentService {
 
                 if (!violations.isEmpty()) {
                     // Save rule violations
+                    boolean approvalTriggered = false;
+                    boolean notityTriggered = false;
                     for (RuleViolation violation : violations) {
 //                        violation.setPayment(payment); // Associate violation with payment
                         ruleViolationRepository.save(violation);
+
+                        System.out.println(violation.getRule().getOwner());
+                        System.out.println(payment);
+
+                        for (RuleAction action : violation.getRule().getActions()) {
+                            String actionType = action.getActionType();
+
+                            if ("REQUIRE_APPROVAL".equals(actionType)) {
+                                transactionApprovalService.createApprovalRequest(
+                                        payment,
+                                        violation.getRule().getMember(),
+                                        violation.getRule().getOwner()
+                                );
+                                approvalTriggered = true;
+                                break; // No need to process further actions
+                            } else if ("NOTIFY".equals(actionType)) {
+                                notificationService.sendNotification(
+                                        violation.getRule().getOwner(),
+                                        "User " + user.getUsername() + " triggered a rule on payment of amount: " + payment.getAmount()
+                                );
+                                notityTriggered = true;
+                            }
+                        }
+
                     }
 
-                    // Update payment status to FAILED
-                    payment.setPaymentStatus(PaymentStatus.FAILED.name());
-                    payment.setFailureReason("Payment violates rules set by the owner");
-                    paymentRepository.save(payment);
+                    if(!approvalTriggered && !notityTriggered){
+                        // Update payment status to FAILED
+                        payment.setPaymentStatus(PaymentStatus.FAILED.name());
+                        payment.setFailureReason("Payment violates rules set by the owner");
+                        paymentRepository.save(payment);
+                    }
 
                     // Throw exception to prevent further processing
-                    throw new RuleViolationException("Payment violates rules set by the owner");
+//                    if(!notityTriggered){
+                        throw new RuleViolationException("Payment violates rules set by the owner");
+//                    }
                 }
             }
         }
     }
+
+//    public Payment approvedPayment()
 
     @Transactional
     public Payment processInternalTransfer(InternalTransferRequest transferRequest) {

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 @Component
 public class RuleValidator {
@@ -23,6 +24,9 @@ public class RuleValidator {
 
     private static final Set<String> VALID_ACTION_TYPES = new HashSet<>(Arrays.asList(
             "BLOCK", "NOTIFY", "REQUIRE_APPROVAL", "LIMIT_AMOUNT", "CUSTOM"));
+
+    private static final Set<String> VALID_DAYS = new HashSet<>(Arrays.asList(
+            "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"));
 
     public void validateRuleCreateRequest(RuleCreateRequest request) {
         // Validate rule type
@@ -77,7 +81,18 @@ public class RuleValidator {
             case "DATE":
                 validateDateCondition(condition);
                 break;
-            // Add more validations for other condition types as needed
+            case "CATEGORY":
+                validateCategoryCondition(condition);
+                break;
+            case "DAY":
+                validateDayCondition(condition);
+                break;
+            case "MERCHANT":
+                validateMerchantCondition(condition);
+                break;
+            case "CUSTOM":
+                validateCustomCondition(condition);
+                break;
         }
     }
 
@@ -134,6 +149,111 @@ public class RuleValidator {
         }
     }
 
+    private void validateCategoryCondition(RuleConditionDTO condition) {
+        // For category conditions, validate based on operator type
+        if ("IN".equals(condition.getOperator()) || "NOT_IN".equals(condition.getOperator())) {
+            String[] categories = condition.getValueString().split(",");
+            if (categories.length == 0) {
+                throw new InvalidRuleException("Category list cannot be empty");
+            }
+
+            // Check that each category isn't empty
+            for (String category : categories) {
+                if (category.trim().isEmpty()) {
+                    throw new InvalidRuleException("Category value cannot be empty");
+                }
+            }
+        } else if ("=".equals(condition.getOperator())) {
+            // For equals operator, just ensure the category isn't empty
+            if (condition.getValueString().trim().isEmpty()) {
+                throw new InvalidRuleException("Category value cannot be empty");
+            }
+        } else {
+            throw new InvalidRuleException("Invalid operator for CATEGORY condition: " + condition.getOperator() +
+                    ". Valid operators are '=', 'IN', 'NOT_IN'");
+        }
+    }
+
+    private void validateDayCondition(RuleConditionDTO condition) {
+        if ("IN".equals(condition.getOperator()) || "NOT_IN".equals(condition.getOperator())) {
+            String[] days = condition.getValueString().split(",");
+            if (days.length == 0) {
+                throw new InvalidRuleException("Day list cannot be empty");
+            }
+
+            // Check each day is valid
+            for (String day : days) {
+                String trimmedDay = day.trim().toUpperCase();
+                if (!VALID_DAYS.contains(trimmedDay)) {
+                    throw new InvalidRuleException("Invalid day value: " + day +
+                            ". Valid days are: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY");
+                }
+            }
+        } else if ("=".equals(condition.getOperator())) {
+            String day = condition.getValueString().trim().toUpperCase();
+            if (!VALID_DAYS.contains(day)) {
+                throw new InvalidRuleException("Invalid day value: " + day +
+                        ". Valid days are: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY");
+            }
+        } else {
+            throw new InvalidRuleException("Invalid operator for DAY condition: " + condition.getOperator() +
+                    ". Valid operators are '=', 'IN', 'NOT_IN'");
+        }
+    }
+
+    private void validateMerchantCondition(RuleConditionDTO condition) {
+        String valueString = condition.getValueString().trim();
+
+        // For operators that work with lists
+        if ("IN".equals(condition.getOperator()) || "NOT_IN".equals(condition.getOperator())) {
+            String[] merchants = valueString.split(",");
+            if (merchants.length == 0) {
+                throw new InvalidRuleException("Merchant list cannot be empty");
+            }
+
+            // Check that each merchant name isn't empty
+            for (String merchant : merchants) {
+                if (merchant.trim().isEmpty()) {
+                    throw new InvalidRuleException("Merchant name cannot be empty");
+                }
+            }
+        }
+        // For string comparison operators
+        else if ("=".equals(condition.getOperator()) ||
+                "CONTAINS".equals(condition.getOperator()) ||
+                "STARTS_WITH".equals(condition.getOperator()) ||
+                "ENDS_WITH".equals(condition.getOperator())) {
+
+            if (valueString.isEmpty()) {
+                throw new InvalidRuleException("Merchant value cannot be empty");
+            }
+        } else {
+            throw new InvalidRuleException("Invalid operator for MERCHANT condition: " + condition.getOperator() +
+                    ". Valid operators are '=', 'IN', 'NOT_IN', 'CONTAINS', 'STARTS_WITH', 'ENDS_WITH'");
+        }
+    }
+
+    private void validateCustomCondition(RuleConditionDTO condition) {
+        // For custom conditions, we'll allow all operators but ensure the value isn't empty
+        String valueString = condition.getValueString().trim();
+
+        if (valueString.isEmpty()) {
+            throw new InvalidRuleException("Custom condition value cannot be empty");
+        }
+
+        // For BETWEEN operator, validate it has two values
+        if ("BETWEEN".equals(condition.getOperator())) {
+            String[] values = valueString.split(",");
+            if (values.length != 2) {
+                throw new InvalidRuleException("BETWEEN operator requires two comma-separated values");
+            }
+
+            if (values[0].trim().isEmpty() || values[1].trim().isEmpty()) {
+                throw new InvalidRuleException("Custom condition values cannot be empty");
+            }
+        }
+    }
+
     private void validateRuleAction(RuleActionDTO action) {
         // Validate action type
         if (!VALID_ACTION_TYPES.contains(action.getActionType())) {
@@ -165,11 +285,19 @@ public class RuleValidator {
                 }
                 break;
             case "NOTIFY":
-                if (!action.getActionConfig().has("notifyUser")) {
-                    throw new InvalidRuleException("NOTIFY action requires 'notifyUser' in config");
+
+                break;
+            case "BLOCK":
+                // No special config required for BLOCK action
+                break;
+            case "REQUIRE_APPROVAL":
+
+                break;
+            case "CUSTOM":
+                if (!action.getActionConfig().has("customActionType")) {
+                    throw new InvalidRuleException("CUSTOM action requires 'customActionType' in config");
                 }
                 break;
-            // Add more validations for other action types as needed
         }
     }
 
@@ -184,7 +312,12 @@ public class RuleValidator {
             case "CATEGORY_BLOCK":
                 validateCategoryBlockRule(request);
                 break;
-            // Add more validations for other rule types as needed
+            case "MANUAL_APPROVAL":
+                validateManualApprovalRule(request);
+                break;
+            case "CUSTOM":
+                validateCustomRule(request);
+                break;
         }
     }
 
@@ -195,14 +328,21 @@ public class RuleValidator {
         if (!hasAmountCondition) {
             throw new InvalidRuleException("SPENDING_LIMIT rule must have at least one AMOUNT condition");
         }
+
+        boolean hasLimitAction = request.getActions().stream()
+                .anyMatch(a -> "LIMIT_AMOUNT".equals(a.getActionType()) || "BLOCK".equals(a.getActionType()));
+
+        if (!hasLimitAction) {
+            throw new InvalidRuleException("SPENDING_LIMIT rule must have either a LIMIT_AMOUNT or BLOCK action");
+        }
     }
 
     private void validateTimeRestrictionRule(RuleCreateRequest request) {
         boolean hasTimeCondition = request.getConditions().stream()
-                .anyMatch(c -> "TIME".equals(c.getConditionType()));
+                .anyMatch(c -> "TIME".equals(c.getConditionType()) || "DAY".equals(c.getConditionType()) || "DATE".equals(c.getConditionType()));
 
         if (!hasTimeCondition) {
-            throw new InvalidRuleException("TIME_RESTRICTION rule must have at least one TIME condition");
+            throw new InvalidRuleException("TIME_RESTRICTION rule must have at least one TIME, DAY, or DATE condition");
         }
     }
 
@@ -212,6 +352,33 @@ public class RuleValidator {
 
         if (!hasCategoryCondition) {
             throw new InvalidRuleException("CATEGORY_BLOCK rule must have at least one CATEGORY condition");
+        }
+
+        boolean hasBlockAction = request.getActions().stream()
+                .anyMatch(a -> "BLOCK".equals(a.getActionType()));
+
+        if (!hasBlockAction) {
+            throw new InvalidRuleException("CATEGORY_BLOCK rule must have at least one BLOCK action");
+        }
+    }
+
+    private void validateManualApprovalRule(RuleCreateRequest request) {
+        boolean hasApprovalAction = request.getActions().stream()
+                .anyMatch(a -> "REQUIRE_APPROVAL".equals(a.getActionType()));
+
+        if (!hasApprovalAction) {
+            throw new InvalidRuleException("MANUAL_APPROVAL rule must have at least one REQUIRE_APPROVAL action");
+        }
+    }
+
+    private void validateCustomRule(RuleCreateRequest request) {
+        // For custom rules, ensure there's at least one condition and one action
+        if (request.getConditions().isEmpty()) {
+            throw new InvalidRuleException("Rule must have at least one condition");
+        }
+
+        if (request.getActions().isEmpty()) {
+            throw new InvalidRuleException("Rule must have at least one action");
         }
     }
 }

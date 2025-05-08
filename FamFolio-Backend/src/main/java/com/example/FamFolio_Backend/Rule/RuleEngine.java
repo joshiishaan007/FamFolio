@@ -54,7 +54,6 @@ public class RuleEngine {
                 if (shouldBlock) {
                     RuleViolation violation = new RuleViolation();
                     violation.setRule(rule);
-//                    violation.setPayment(payment);
                     violation.setCreatedAt(LocalDateTime.now());
                     violation.setViolationNotes("Payment violates rule: " + rule.getRuleName());
 

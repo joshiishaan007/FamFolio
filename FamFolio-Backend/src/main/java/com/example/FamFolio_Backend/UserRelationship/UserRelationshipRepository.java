@@ -21,6 +21,8 @@ public interface UserRelationshipRepository extends JpaRepository<UserRelationsh
     
     boolean existsByOwnerAndMember(User owner, User member);
 
+    User findOwnerByMember(User member);
+
     boolean existsByOwner_IdAndMember_Id(Long ownerId, Long memberId);
 
     @Query("SELECT ur.owner FROM UserRelationship ur WHERE ur.member.id = :memberId")

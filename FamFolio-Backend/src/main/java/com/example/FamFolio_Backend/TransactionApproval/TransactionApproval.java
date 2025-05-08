@@ -2,6 +2,7 @@ package com.example.FamFolio_Backend.TransactionApproval;
 
 import java.time.LocalDateTime;
 
+import com.example.FamFolio_Backend.Payment.Payment;
 import com.example.FamFolio_Backend.Transaction.Transaction;
 import com.example.FamFolio_Backend.user.User;
 
@@ -15,6 +16,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
 @Table(name = "transaction_approvals")
@@ -25,8 +28,8 @@ public class TransactionApproval {
     private Long id;
     
     @ManyToOne
-    @JoinColumn(name = "transaction_id", nullable = false)
-    private Transaction transaction;
+    @JoinColumn(name = "payment_id", nullable = false)
+    private Payment payment;
     
     @ManyToOne
     @JoinColumn(name = "requested_by", nullable = false)
@@ -41,10 +44,12 @@ public class TransactionApproval {
     
     @Column(name = "approval_notes")
     private String approvalNotes;
-    
+
+    @CreationTimestamp
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
-    
+
+    @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
@@ -53,8 +58,8 @@ public class TransactionApproval {
     }
     
     // Constructor with fields
-    public TransactionApproval(Transaction transaction, User requestedBy, String status) {
-        this.transaction = transaction;
+    public TransactionApproval(Payment transaction, User requestedBy, String status) {
+        this.payment = transaction;
         this.requestedBy = requestedBy;
         this.status = status;
         this.createdAt = LocalDateTime.now();
@@ -70,12 +75,12 @@ public class TransactionApproval {
         this.id = id;
     }
 
-    public Transaction getTransaction() {
-        return transaction;
+    public Payment getTransaction() {
+        return payment;
     }
 
-    public void setTransaction(Transaction transaction) {
-        this.transaction = transaction;
+    public void setTransaction(Payment transaction) {
+        this.payment = transaction;
     }
 
     public User getRequestedBy() {
@@ -125,16 +130,5 @@ public class TransactionApproval {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
-    
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
-    
-    @PrePersist
-    public void prePersist() {
-        LocalDateTime now = LocalDateTime.now();
-        this.createdAt = now;
-        this.updatedAt = now;
-    }
+
 }

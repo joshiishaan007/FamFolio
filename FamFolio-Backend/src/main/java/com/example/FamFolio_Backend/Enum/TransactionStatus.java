@@ -1,9 +1,10 @@
 package com.example.FamFolio_Backend.Enum;
 
 public enum TransactionStatus {
-    PENDING,       // Transaction is in progress
-    COMPLETED,     // Transaction has been successfully completed
-    FAILED,        // Transaction has failed
-    REFUNDED,      // Transaction has been refunded
-    CANCELLED      // Transaction was cancelled
+    INITIATED,        // Transaction has been created but not processed
+    PENDING_APPROVAL, // Transaction is waiting for approval
+    IN_PROGRESS,      // Transaction is being processed
+    COMPLETED,        // Transaction has completed successfully
+    FAILED,           // Transaction has failed
+    CANCELLED         // Transaction was cancelled by the user
 }
