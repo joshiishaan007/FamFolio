@@ -52,7 +52,7 @@ const Header = () => {
       { name: "Add Member", path: "/add-member", roles: ["OWNER"] },
       { name: "Make Payment", path: "/merchant-transaction", roles: ["OWNER", "MEMBER"] },
       { name: "Create Rules", path: "/rules", roles: ["OWNER"] },
-      { name: "Parent Dashboard", path: "/parent-dashboard", roles: ["OWNER"] },
+      { name: "Family Dashboard", path: "/parent-dashboard", roles: ["OWNER"] },
       { name: "Member Dashboard", path: "/member-dashboard", roles: ["MEMBER","OWNER"] },
       { name: "Admin Dashboard", path: "/admin-dashboard", roles: ["ADMIN"] },
       { name: "About Us", path: "/about" },

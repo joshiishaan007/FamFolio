@@ -122,7 +122,7 @@ const Otp = ({ userData }) => {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2, duration: 0.5 }}>
             <h1 className="text-2xl font-bold text-blue-800 text-center mb-2">OTP Verification</h1>
             <p className="text-blue-600 text-center mb-6">
-              Enter the 6-digit OTP sent to your registered mobile number
+              Enter the 6-digit OTP sent to your registered email
             </p>
           </motion.div>
 
