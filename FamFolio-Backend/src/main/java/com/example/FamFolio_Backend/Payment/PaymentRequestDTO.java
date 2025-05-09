@@ -16,7 +16,7 @@ public class PaymentRequestDTO {
     @NotNull(message = "Category ID is required")
     private Long categoryId;
 
-    @NotNull(message = "username is required")
+    @NotNull(message = "username required")
     private String username;
 
     @NotBlank(message = "Destination type is required")

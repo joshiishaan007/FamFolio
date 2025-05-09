@@ -52,21 +52,21 @@ public class RuleServiceImpl implements RuleService {
     @Transactional
     public RuleDTO createRule(RuleCreateRequest request) {
 
-        if (request.getOwnerId() == null) {
+        if (request.getOwner() == null) {
             throw new IllegalArgumentException("Owner ID is required.");
         }
 
-        if (request.getMemberId() == null) {
+        if (request.getMember() == null) {
             throw new IllegalArgumentException("Member ID is required.");
         }
         // Validate the rule
         ruleValidator.validateRuleCreateRequest(request);
 
-        User owner = userRepository.findById(request.getOwnerId())
-                .orElseThrow(()->new UserNotFoundException("Owner not found with Id:"+request.getOwnerId()));
+        User owner = userRepository.findByUsername(request.getOwner())
+                .orElseThrow(()->new UserNotFoundException("Owner not found with username:"+request.getOwner()));
 
-        User member = userRepository.findById(request.getMemberId())
-                .orElseThrow(()->new UserNotFoundException("Member not found with Id:"+request.getOwnerId()));
+        User member = userRepository.findByUsername(request.getMember())
+                .orElseThrow(()->new UserNotFoundException("Member not found with username:"+request.getOwner()));
 
         // Create rule entity
         Rule rule = new Rule();
@@ -144,11 +144,11 @@ public class RuleServiceImpl implements RuleService {
         Rule rule = ruleRepository.findById(ruleId)
                 .orElseThrow(() -> new RuleNotFoundException(ruleId));
 
-        if(!rule.getOwner().getId().equals(request.getOwnerId())){
+        if(!rule.getOwner().getUsername().equals(request.getOwner())){
             throw new IllegalArgumentException("Enter valid Owner Id");
         }
 
-        if(!rule.getMember().getId().equals(request.getMemberId())){
+        if(!rule.getMember().getUsername().equals(request.getMember())){
             throw new IllegalArgumentException("Enter valid Member Id");
         }
 

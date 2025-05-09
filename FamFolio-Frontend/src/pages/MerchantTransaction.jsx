@@ -1,218 +1,105 @@
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { AtSign, Lock, Check, AlertCircle, ShoppingCart, Utensils, Home, Lightbulb, Wifi, Bus, Car, Dumbbell, HeartPulse, Shield, Film, ShoppingBag, Plane, GraduationCap, Gift, Scissors,  ChartLine } from "lucide-react";
-import Confetti from "react-confetti";
-import { useNavigate } from "react-router-dom";
-
-const categories = [
-  { id: 1, icon: ShoppingCart, name: "Groceries", description: "Food and household essentials" },
-  { id: 2, icon: Utensils, name: "Dining Out", description: "Restaurants, cafes, and takeout" },
-  { id: 3, icon: Home, name: "Rent/Mortgage", description: "Housing payments" },
-  { id: 4, icon: Lightbulb, name: "Utilities", description: "Electricity, water, gas, etc." },
-  { id: 5, icon: Wifi, name: "Internet & Phone", description: "Internet and mobile services" },
-  { id: 6, icon: Bus, name: "Transportation", description: "Public transport, taxis, rideshares" },
-  { id: 7, icon: Car, name: "Car Expenses", description: "Fuel, maintenance, insurance" },
-  { id: 8, icon: Dumbbell, name: "Health & Fitness", description: "Gym memberships, supplements" },
-  { id: 9, icon: HeartPulse, name: "Medical", description: "Doctor visits, prescriptions" },
-  { id: 10, icon: Shield, name: "Insurance", description: "Health, life, property insurance" },
-  { id: 11, icon: Film, name: "Entertainment", description: "Movies, concerts, streaming services" },
-  { id: 12, icon: ShoppingBag, name: "Shopping", description: "Clothing, electronics, general purchases" },
-  { id: 13, icon: Plane, name: "Travel", description: "Flights, hotels, vacations" },
-  { id: 14, icon: GraduationCap, name: "Education", description: "Tuition, books, courses" },
-  { id: 15, icon: Gift, name: "Gifts & Donations", description: "Presents and charitable giving" },
-  { id: 16, icon: Scissors, name: "Personal Care", description: "Haircuts, cosmetics, spa" },
-  { id: 17, icon: Gift, name: "Home Maintenance", description: "Repairs, cleaning supplies" },
-  { id: 18, icon: ChartLine, name: "Investments", description: "Stocks, retirement contributions" },
-  { id: 19, icon: Gift, name: "Childcare", description: "Babysitting, school fees" },
-  { id: 20, icon: Gift, name: "Pet Care", description: "Food, vet visits, pet supplies" },
-];
+import { useState, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { AtSign, Lock, Check, AlertCircle } from "lucide-react"
+import Confetti from "react-confetti"
 
 const MerchantTransaction = () => {
-  const [formData, setFormData] = useState({
-    amount: "",
-    upiId: "",
-    upiPin: "",
-    merchantName: "",
-    location: "",
-    destinationIdentifier: "",
-    categoryId: "",
-  });
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
+  const [amount, setAmount] = useState("")
+  const [upiId, setUpiId] = useState("")
+  const [upiPin, setUpiPin] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
+  const [showConfetti, setShowConfetti] = useState(false)
   const [errors, setErrors] = useState({
     amount: "",
     upiId: "",
     upiPin: "",
-    merchantName: "",
-    location: "",
-    destinationIdentifier: "",
-    categoryId: "",
-  });
+  })
   const [windowSize, setWindowSize] = useState({
     width: typeof window !== "undefined" ? window.innerWidth : 0,
     height: typeof window !== "undefined" ? window.innerHeight : 0,
-  });
-  const navigate = useNavigate();
+  })
 
   useEffect(() => {
     const handleResize = () => {
       setWindowSize({
         width: window.innerWidth,
         height: window.innerHeight,
-      });
-    };
+      })
+    }
 
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
+  }, [])
 
   const validateForm = () => {
-    let valid = true;
+    let valid = true
     const newErrors = {
       amount: "",
       upiId: "",
       upiPin: "",
-      merchantName: "",
-      location: "",
-      destinationIdentifier: "",
-      categoryId: "",
-    };
+    }
 
     // Validate amount
-    if (!formData.amount) {
-      newErrors.amount = "Amount is required";
-      valid = false;
-    } else if (isNaN(formData.amount) || Number.parseFloat(formData.amount) <= 0) {
-      newErrors.amount = "Please enter a valid amount";
-      valid = false;
+    if (!amount) {
+      newErrors.amount = "Amount is required"
+      valid = false
+    } else if (isNaN(amount) || Number.parseFloat(amount) <= 0) {
+      newErrors.amount = "Please enter a valid amount"
+      valid = false
     }
 
     // Validate UPI ID
-    if (!formData.upiId) {
-      newErrors.upiId = "UPI ID is required";
-      valid = false;
-    } else if (!formData.upiId.includes("@")) {
-      newErrors.upiId = "Please enter a valid UPI ID";
-      valid = false;
+    if (!upiId) {
+      newErrors.upiId = "UPI ID is required"
+      valid = false
+    } else if (!upiId.includes("@")) {
+      newErrors.upiId = "Please enter a valid UPI ID"
+      valid = false
     }
 
     // Validate UPI PIN
-    if (!formData.upiPin) {
-      newErrors.upiPin = "UPI PIN is required";
-      valid = false;
-    } else if (formData.upiPin.length !== 4 || isNaN(formData.upiPin)) {
-      newErrors.upiPin = "UPI PIN must be a 4-digit number";
-      valid = false;
+    if (!upiPin) {
+      newErrors.upiPin = "UPI PIN is required"
+      valid = false
+    } else if (upiPin.length !== 4 || isNaN(upiPin)) {
+      newErrors.upiPin = "UPI PIN must be a 4-digit number"
+      valid = false
     }
 
-    // Validate merchant name
-    if (!formData.merchantName) {
-      newErrors.merchantName = "Merchant name is required";
-      valid = false;
-    }
+    setErrors(newErrors)
+    return valid
+  }
 
-    // Validate location
-    if (!formData.location) {
-      newErrors.location = "Location is required";
-      valid = false;
-    }
+  const handleSubmit = (e) => {
+    e.preventDefault()
 
-    // Validate destination identifier
-    if (!formData.destinationIdentifier) {
-      newErrors.destinationIdentifier = "Merchant ID is required";
-      valid = false;
-    }
-
-    // Validate category
-    if (!formData.categoryId) {
-      newErrors.categoryId = "Category is required";
-      valid = false;
-    }
-
-    setErrors(newErrors);
-    return valid;
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-   
-  
     if (!validateForm()) {
-      return;
+      return
     }
 
-    setIsLoading(true);
+    setIsLoading(true)
 
-    try {
-      const username = localStorage.getItem("username");
-      if (!username) {
-        throw new Error("User not authenticated");
-      }
+    // Simulate API call
+    setTimeout(() => {
+      setIsLoading(false)
+      setIsSuccess(true)
+      setShowConfetti(true)
 
-      const selectedCategory = categories.find(cat => cat.id === parseInt(formData.categoryId));
-      
-      const requestBody = {
-        paymentMethod: "UPI",
-        paymentPurpose: selectedCategory.description,
-        categoryId: parseInt(formData.categoryId),
-        username: username,
-        destinationType: "merchant",
-        destinationIdentifier: formData.destinationIdentifier,
-        amount: parseFloat(formData.amount),
-        merchantName: formData.merchantName,
-        location: formData.location
-      };
-      console.log(requestBody)
-      const response = await fetch("http://localhost:8080/api/payments/external", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("jwt")}`
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Payment failed");
-      }
-
-      setIsSuccess(true);
-      setShowConfetti(true);
-
-      // Hide confetti after 5 seconds and redirect to home
+      // Hide confetti after 5 seconds
       setTimeout(() => {
-        setShowConfetti(false);
-        navigate("/");
-      }, 5000);
-    } catch (err) {
-      setErrors(prev => ({ ...prev, form: err.message || "Payment failed. Please try again." }));
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        setShowConfetti(false)
+      }, 5000)
+    }, 2000)
+  }
 
   const handleReset = () => {
-    setFormData({
-      amount: "",
-      upiId: "",
-      upiPin: "",
-      merchantName: "",
-      location: "",
-      destinationIdentifier: "",
-      categoryId: "",
-    });
-    setIsSuccess(false);
-    setIsLoading(false);
-  };
+    setAmount("")
+    setUpiId("")
+    setUpiPin("")
+    setIsSuccess(false)
+    setIsLoading(false)
+  }
 
   // Animation variants
   const containerVariants = {
@@ -226,7 +113,7 @@ const MerchantTransaction = () => {
         staggerChildren: 0.1,
       },
     },
-  };
+  }
 
   const itemVariants = {
     hidden: { opacity: 0, y: 10 },
@@ -238,13 +125,13 @@ const MerchantTransaction = () => {
         ease: "easeOut",
       },
     },
-  };
+  }
 
   const buttonVariants = {
     idle: { scale: 1 },
     hover: { scale: 1.02, boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)" },
     tap: { scale: 0.98 },
-  };
+  }
 
   const successIconVariants = {
     hidden: { scale: 0, opacity: 0 },
@@ -256,7 +143,7 @@ const MerchantTransaction = () => {
         times: [0, 0.6, 1],
       },
     },
-  };
+  }
 
   return (
     <div className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-blue-50 to-white p-4">
@@ -272,19 +159,9 @@ const MerchantTransaction = () => {
           Pay a Merchant
         </motion.h1>
 
-        {errors.form && (
-          <motion.div 
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm"
-          >
-            {errors.form}
-          </motion.div>
-        )}
-
         <form onSubmit={handleSubmit}>
           {/* Amount Field */}
-          <motion.div variants={itemVariants} className="mb-4">
+          <motion.div variants={itemVariants} className="mb-5">
             <label htmlFor="amount" className="mb-2 block text-sm font-medium text-gray-700">
               Amount
             </label>
@@ -295,9 +172,8 @@ const MerchantTransaction = () => {
               <input
                 type="text"
                 id="amount"
-                name="amount"
-                value={formData.amount}
-                onChange={handleChange}
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
                 placeholder="Enter amount e.g. 250"
                 className={`block w-full rounded-lg border ${
                   errors.amount ? "border-red-300" : "border-gray-300"
@@ -316,125 +192,8 @@ const MerchantTransaction = () => {
             )}
           </motion.div>
 
-          {/* Merchant Name Field */}
-          <motion.div variants={itemVariants} className="mb-4">
-            <label htmlFor="merchantName" className="mb-2 block text-sm font-medium text-gray-700">
-              Merchant Name
-            </label>
-            <input
-              type="text"
-              id="merchantName"
-              name="merchantName"
-              value={formData.merchantName}
-              onChange={handleChange}
-              placeholder="e.g. FreshMart Supermarket"
-              className={`block w-full rounded-lg border ${
-                errors.merchantName ? "border-red-300" : "border-gray-300"
-              } bg-gray-50 p-3 text-gray-900 shadow-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200`}
-              disabled={isLoading || isSuccess}
-            />
-            {errors.merchantName && (
-              <motion.p
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-1 text-sm text-red-600"
-              >
-                {errors.merchantName}
-              </motion.p>
-            )}
-          </motion.div>
-
-          {/* Location Field */}
-          <motion.div variants={itemVariants} className="mb-4">
-            <label htmlFor="location" className="mb-2 block text-sm font-medium text-gray-700">
-              Location
-            </label>
-            <input
-              type="text"
-              id="location"
-              name="location"
-              value={formData.location}
-              onChange={handleChange}
-              placeholder="e.g. 123 Main St, Cityville"
-              className={`block w-full rounded-lg border ${
-                errors.location ? "border-red-300" : "border-gray-300"
-              } bg-gray-50 p-3 text-gray-900 shadow-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200`}
-              disabled={isLoading || isSuccess}
-            />
-            {errors.location && (
-              <motion.p
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-1 text-sm text-red-600"
-              >
-                {errors.location}
-              </motion.p>
-            )}
-          </motion.div>
-
-          {/* Merchant ID Field */}
-          <motion.div variants={itemVariants} className="mb-4">
-            <label htmlFor="destinationIdentifier" className="mb-2 block text-sm font-medium text-gray-700">
-              Merchant ID
-            </label>
-            <input
-              type="text"
-              id="destinationIdentifier"
-              name="destinationIdentifier"
-              value={formData.destinationIdentifier}
-              onChange={handleChange}
-              placeholder="e.g. SUPERMARKET-12345"
-              className={`block w-full rounded-lg border ${
-                errors.destinationIdentifier ? "border-red-300" : "border-gray-300"
-              } bg-gray-50 p-3 text-gray-900 shadow-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200`}
-              disabled={isLoading || isSuccess}
-            />
-            {errors.destinationIdentifier && (
-              <motion.p
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-1 text-sm text-red-600"
-              >
-                {errors.destinationIdentifier}
-              </motion.p>
-            )}
-          </motion.div>
-
-          {/* Category Selection */}
-          <motion.div variants={itemVariants} className="mb-4">
-            <label htmlFor="categoryId" className="mb-2 block text-sm font-medium text-gray-700">
-              Category
-            </label>
-            <select
-              id="categoryId"
-              name="categoryId"
-              value={formData.categoryId}
-              onChange={handleChange}
-              className={`block w-full rounded-lg border ${
-                errors.categoryId ? "border-red-300" : "border-gray-300"
-              } bg-gray-50 p-3 text-gray-900 shadow-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200`}
-              disabled={isLoading || isSuccess}
-            >
-              <option value="">Select a category</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-            {errors.categoryId && (
-              <motion.p
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-1 text-sm text-red-600"
-              >
-                {errors.categoryId}
-              </motion.p>
-            )}
-          </motion.div>
-
           {/* UPI ID Field */}
-          <motion.div variants={itemVariants} className="mb-4">
+          <motion.div variants={itemVariants} className="mb-5">
             <label htmlFor="upiId" className="mb-2 block text-sm font-medium text-gray-700">
               Merchant UPI ID
             </label>
@@ -445,9 +204,8 @@ const MerchantTransaction = () => {
               <input
                 type="text"
                 id="upiId"
-                name="upiId"
-                value={formData.upiId}
-                onChange={handleChange}
+                value={upiId}
+                onChange={(e) => setUpiId(e.target.value)}
                 placeholder="merchant@upi"
                 className={`block w-full rounded-lg border ${
                   errors.upiId ? "border-red-300" : "border-gray-300"
@@ -478,9 +236,8 @@ const MerchantTransaction = () => {
               <input
                 type="password"
                 id="upiPin"
-                name="upiPin"
-                value={formData.upiPin}
-                onChange={handleChange}
+                value={upiPin}
+                onChange={(e) => setUpiPin(e.target.value)}
                 placeholder="••••"
                 maxLength={4}
                 className={`block w-full rounded-lg border ${
@@ -548,7 +305,7 @@ const MerchantTransaction = () => {
                   </div>
                   <h3 className="mb-2 text-xl font-bold text-green-600">Payment Successful</h3>
                   <p className="mb-6 text-center text-sm text-gray-600">
-                    ₹{formData.amount} paid to {formData.merchantName}
+                    ₹{amount} paid to {upiId}
                   </p>
                   <motion.button
                     variants={buttonVariants}
@@ -567,7 +324,7 @@ const MerchantTransaction = () => {
         </form>
       </motion.div>
     </div>
-  );
-};
+  )
+}
 
-export default MerchantTransaction;
+export default MerchantTransaction

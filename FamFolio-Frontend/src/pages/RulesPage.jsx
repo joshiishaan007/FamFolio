@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import axios from "axios"
 
 const RulesPage = () => {
   // State for form data
@@ -13,12 +14,54 @@ const RulesPage = () => {
   const [conditions, setConditions] = useState([{ id: 1, type: "", operator: "", value: "" }])
   const [actions, setActions] = useState([{ id: 1, type: "", config: {} }])
   const [showToast, setShowToast] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [familyMembers, setFamilyMembers] = useState([])
+  const [username, setUsername] = useState(null)
 
   // Sample data for dropdowns
   const ruleTypes = ["SPENDING_LIMIT", "TIME_RESTRICTION", "CATEGORY_BLOCK", "MANUAL_APPROVAL", "CUSTOM"]
-  const familyMembers = ["Mom", "Dad", "Child 1", "Child 2"]
   const conditionTypes = ["AMOUNT", "CATEGORY", "TIME", "DAY", "DATE", "MERCHANT", "CUSTOM"]
   const actionTypes = ["BLOCK", "NOTIFY", "REQUIRE_APPROVAL", "LIMIT_AMOUNT", "CUSTOM"]
+
+  // Days of week for day picker
+  const daysOfWeek = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"]
+
+  // Categories for category picker
+  const categories = ["Groceries", "Entertainment", "Education", "Shopping", "Travel", "Food", "Utilities"]
+
+  // Get auth token and username from localStorage
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("jwt")
+    const username = localStorage.getItem("username")
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "X-Username": username
+      }
+    }
+  }
+
+  // Fetch family members from API
+  useEffect(() => {
+    const fetchFamilyMembers = async () => {
+
+      const name = localStorage.getItem("username")
+      setUsername(name)
+
+      try {
+        setIsLoading(true)
+        const response = await axios.get(`http://localhost:8080/api/relationships/family/${name}`, getAuthHeaders())
+        setFamilyMembers(response.data)
+      } catch (error) {
+        console.error("Error fetching family members:", error)
+        // Handle error (show toast or message)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchFamilyMembers()
+  }, [])
 
   // Dynamic operators based on condition type
   const getOperators = (type) => {
@@ -39,12 +82,6 @@ const RulesPage = () => {
         return []
     }
   }
-
-  // Days of week for day picker
-  const daysOfWeek = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"]
-
-  // Categories for category picker
-  const categories = ["Groceries", "Entertainment", "Education", "Shopping", "Travel", "Food", "Utilities"]
 
   // Add condition
   const addCondition = () => {
@@ -386,8 +423,8 @@ const RulesPage = () => {
               >
                 <option value="">Select User</option>
                 {familyMembers.map((member) => (
-                  <option key={member} value={member}>
-                    {member}
+                  <option key={member.id} value={member.id}>
+                    {member.name}
                   </option>
                 ))}
               </select>
@@ -416,8 +453,8 @@ const RulesPage = () => {
             >
               <option value="">Select Approver</option>
               {familyMembers.map((member) => (
-                <option key={member} value={member}>
-                  {member}
+                <option key={member.id} value={member.id}>
+                  {member.name}
                 </option>
               ))}
             </select>
@@ -458,21 +495,55 @@ const RulesPage = () => {
   }
 
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    console.log({
-      ruleName,
-      ruleType,
-      ruleDescription,
-      familyMember,
-      isActive,
-      conditions,
-      actions,
-    })
+    
+    try {
+      setIsLoading(true)
+      
+      // Prepare the rule data for API
+      const ruleData = {
+        ruleName: ruleName,
+        ruleType: ruleType,
+        member: familyMember,
+        owner:username,
+        isActive,
+        conditions: conditions.map(condition => ({
+          conditionType: condition.type,
+          operator: condition.operator,
+          valueString: (Array.isArray(condition.value) ? condition.value : [condition.value]).join(",")
+        })),
+        actions: actions.map(action => ({
+          actionType: action.type,
+          actionConfig: action.config
+        }))
+      }
 
-    // Show success toast
-    setShowToast(true)
-    setTimeout(() => setShowToast(false), 3000)
+      // Post the rule to API
+      const response = await axios.post(`http://localhost:8080/api/rules`, ruleData, getAuthHeaders())
+      
+      console.log("Rule created successfully:", response.data)
+      alert("Rule created successfully:", response.data)
+      
+      // Show success toast
+      setShowToast(true)
+      setTimeout(() => setShowToast(false), 3000)
+      
+      // Reset form after successful submission
+      setRuleName("")
+      setRuleType("")
+      setRuleDescription("")
+      setFamilyMember("")
+      setIsActive(true)
+      setConditions([{ id: 1, type: "", operator: "", value: "" }])
+      setActions([{ id: 1, type: "", config: {} }])
+      
+    } catch (error) {
+      console.error("Error creating rule:", error)
+      // You might want to show an error toast here
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   // Get action icon
@@ -569,14 +640,18 @@ const RulesPage = () => {
                   className="form-select rounded-md border-gray-300 focus:border-blue-400 focus:ring focus:ring-blue-200 transition-all w-full"
                   value={familyMember}
                   onChange={(e) => setFamilyMember(e.target.value)}
+                  disabled={isLoading || familyMembers.length === 0}
                 >
                   <option value="">Select Family Member</option>
-                  {familyMembers.map((member) => (
+                  {Array.isArray(familyMembers) &&
+                  familyMembers.map((member) => (
                     <option key={member} value={member}>
                       {member}
                     </option>
                   ))}
+
                 </select>
+                {isLoading && <p className="text-sm text-gray-500 mt-1">Loading family members...</p>}
               </div>
 
               <div className="flex items-center">
@@ -611,7 +686,7 @@ const RulesPage = () => {
             <h2 className="text-xl font-semibold text-blue-700 mb-4">Set Conditions</h2>
 
             <AnimatePresence>
-              {conditions.map((condition, index) => (
+              {conditions.map((condition) => (
                 <motion.div
                   key={condition.id}
                   initial={{ opacity: 0, height: 0 }}
@@ -769,8 +844,19 @@ const RulesPage = () => {
               whileTap={{ scale: 0.95 }}
               type="submit"
               className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center"
+              disabled={isLoading}
             >
-              <span>Save Rule</span>
+              {isLoading ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Saving...
+                </>
+              ) : (
+                "Save Rule"
+              )}
             </motion.button>
           </motion.div>
         </form>

@@ -24,7 +24,7 @@ public class RuleViolation {
     private Long id;
     
     @ManyToOne
-    @JoinColumn(name = "transaction_id", nullable = false)
+    @JoinColumn(name = "transaction_id")
     private Transaction transaction;
     
     @ManyToOne

@@ -4,6 +4,7 @@ package com.example.FamFolio_Backend.UserRelationship;
 import java.util.List;
 import java.util.Optional;
 
+import com.example.FamFolio_Backend.Exception.UserNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -97,5 +98,18 @@ public class UserRelationshipService {
             throw new IllegalArgumentException("Relationship not found with id: " + relationshipId);
         }
         userRelationshipRepository.deleteById(relationshipId);
+    }
+
+    public User getOwnerForMember(Long id) {
+        return userRelationshipRepository.findOwnerByMemberId(id);
+    }
+
+    public List<String> getFamilyMembers(String username){
+        User owner = userRepository.findByUsername(username)
+                .orElseThrow(()->new UserNotFoundException("Owner not found with username:"+username));
+
+        return userRelationshipRepository.findMembersByOwner(owner).stream()
+                .map(User::getUsername)
+                .toList();
     }
 }
