@@ -22,7 +22,7 @@ import ViewTransaction from './pages/ViewTransaction'
 import axios from 'axios'
 
 export const axiosInstance = axios.create({
-  baseURL: 'http://localhost:8080',
+  baseURL: 'https://famfolio-1.onrender.com',
 });
 
 const ProtectedRoute = ({ children, requiredRole = null }) => {
