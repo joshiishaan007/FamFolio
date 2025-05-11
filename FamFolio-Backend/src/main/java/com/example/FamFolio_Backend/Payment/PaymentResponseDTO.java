@@ -14,20 +14,31 @@ public class PaymentResponseDTO {
     private String paymentStatus;
     private String paymentReference;
     private LocalDateTime timestamp;
+    private String failureReason;
+    private Long transactionId;
 
-    public PaymentResponseDTO(Payment payment) {
+    public PaymentResponseDTO(Payment payment, String reason, Long transactionId) {
         this.paymentId = payment.getId();
         this.sourceWalletUpiId = payment.getSourceWallet().getUpiId();
         this.destinationType = payment.getDestinationType();
         this.destinationIdentifier = payment.getDestinationIdentifier();
         this.amount = payment.getAmount();
         this.paymentStatus = payment.getPaymentStatus();
-        this.paymentReference = payment.getPaymentGatewayReference();
         this.timestamp = payment.getCreatedAt();
+        this.failureReason = reason;
+        this.transactionId = transactionId;
     }
 
     // Getters and setters
 
+
+    public Long getTransactionId() {
+        return transactionId;
+    }
+
+    public void setTransactionId(Long transactionId) {
+        this.transactionId = transactionId;
+    }
 
     public Long getPaymentId() {
         return paymentId;
@@ -59,6 +70,14 @@ public class PaymentResponseDTO {
 
     public void setDestinationIdentifier(String destinationIdentifier) {
         this.destinationIdentifier = destinationIdentifier;
+    }
+
+    public String getFailureReason() {
+        return failureReason;
+    }
+
+    public void setFailureReason(String failureReason) {
+        this.failureReason = failureReason;
     }
 
     public BigDecimal getAmount() {

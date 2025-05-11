@@ -29,7 +29,7 @@ public class Transaction {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "wallet_id", nullable = false)
     @JsonBackReference
-      @JsonIgnore
+    @JsonIgnore
     private Wallet wallet;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -62,8 +62,8 @@ public class Transaction {
     @Column(nullable = false)
     private String status;
 
-    @Column(name = "status_reason")
-    private String statusReason;
+    @Column(name = "failure_reason")
+    private String failureReason;
 
     @Column(name = "upi_reference")
     private String upiReference;
@@ -162,12 +162,12 @@ public class Transaction {
         this.status = status;
     }
 
-    public String getStatusReason() {
-        return statusReason;
+    public String getFailureReason() {
+        return failureReason;
     }
 
-    public void setStatusReason(String statusReason) {
-        this.statusReason = statusReason;
+    public void setFailureReason(String failureReason) {
+        this.failureReason = failureReason;
     }
 
     public String getUpiReference() {

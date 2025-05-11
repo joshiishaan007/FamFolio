@@ -10,11 +10,10 @@ public class PaymentRequestDTO {
     @NotBlank(message = "Payment method is required")
     private String paymentMethod;
 
-    @NotBlank(message = "Payment purpose is required")
     private String paymentPurpose;
 
-    @NotNull(message = "Category ID is required")
-    private Long categoryId;
+    @NotNull(message = "Category name is required")
+    private String categoryName;
 
     @NotNull(message = "username required")
     private String username;
@@ -35,6 +34,7 @@ public class PaymentRequestDTO {
 
     // No arg Constructor
     public PaymentRequestDTO() {
+        this.destinationType = "UPI";
     }
 
     // Getters and setters
@@ -56,12 +56,12 @@ public class PaymentRequestDTO {
         this.paymentPurpose = paymentPurpose;
     }
 
-    public Long getCategoryId() {
-        return categoryId;
+    public String getCategoryName() {
+        return categoryName;
     }
 
-    public void setCategoryId(Long categoryId) {
-        this.categoryId = categoryId;
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
     }
 
     public String getUsername() {

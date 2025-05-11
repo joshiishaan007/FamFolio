@@ -70,33 +70,28 @@ public class PaymentService {
     }
 
     @Transactional
-    public Payment processExternalPayment(PaymentRequestDTO paymentRequest) {
-        // Get current authenticated user
+    public PaymentResponseDTO processExternalPayment(PaymentRequestDTO paymentRequest) {
+
         User currentUser = getCurrentUser();
         User user;
 
-        // Determine the source wallet based on request
         Wallet sourceWallet;
 
         if (paymentRequest.getUsername() != null) {
-            // If source wallet ID is provided, check access
 
             user=userService.findByUsername(paymentRequest.getUsername());
             sourceWallet = user.getWallets();
-
-            // Check if user can use this wallet
             verifyWalletAccess(currentUser, sourceWallet);
+
         } else {
-            // Default to user's own wallet
+
             sourceWallet = currentUser.getWallets();
         }
 
-        // Check if wallet is active
         if (!sourceWallet.getIsActive()) {
             throw new PaymentProcessingException("Source wallet is inactive");
         }
 
-        // Check if there's enough balance
         if (sourceWallet.getBalance().compareTo(paymentRequest.getAmount()) < 0) {
             throw new InsufficientBalanceException("Insufficient balance in wallet");
         }
@@ -112,75 +107,73 @@ public class PaymentService {
         payment.setPaymentPurpose(paymentRequest.getPaymentPurpose());
         payment.setMerchantName(paymentRequest.getMerchantName());
         payment.setLocation(paymentRequest.getLocation());
-
-        // Set category if provided
-        if (paymentRequest.getCategoryId() != null) {
-            Category category = categoryRepository.findById(paymentRequest.getCategoryId())
+        if (paymentRequest.getCategoryName() != null) {
+            Category category = categoryRepository.findByName(paymentRequest.getCategoryName())
                     .orElseThrow(() -> new EntityNotFoundException("Category not found"));
             payment.setCategory(category);
         }
-
-        // Set initial status
         payment.setPaymentStatus(PaymentStatus.INITIATED.name());
-
-        // Save payment
         Payment savedPayment = paymentRepository.save(payment);
+
+        Transaction transaction = transactionService.createTransaction(
+                sourceWallet,
+                currentUser,
+                savedPayment,
+                paymentRequest.getAmount().negate(),
+                "DEBIT",
+                payment.getCategory(),
+                paymentRequest.getMerchantName(),
+                paymentRequest.getPaymentPurpose(),
+                TransactionStatus.INITIATED.name(),
+                generateUpiReference()
+        );
 
         // Check if this payment requires rule validation
         try {
-            validatePaymentAgainstRules(savedPayment);
+            validatePaymentAgainstRules(savedPayment,transaction);
         } catch (RuleViolationException e) {
-            // If rules are violated, return the payment without further processing
-            // The payment status has already been set to FAILED in validatePaymentAgainstRules
-            return savedPayment;
+
+            transaction.setStatus(TransactionStatus.FAILED.name());
+            transaction.setFailureReason(e.getMessage());
+            transactionService.updateTransaction(transaction);
+
+            return new PaymentResponseDTO(savedPayment,transaction.getFailureReason(), transaction.getId());
         }
 
         try {
-            // Check if wallet has sufficient balance
-            if (sourceWallet.getBalance().compareTo(payment.getAmount()) < 0) {
-                payment.setPaymentStatus(PaymentStatus.FAILED.name());
-                payment.setFailureReason("Insufficient balance");
-                return paymentRepository.save(payment);
-            }
 
-            // Process payment via payment gateway (simulated)
             boolean paymentSuccess = processPaymentGateway(savedPayment);
 
             if (paymentSuccess) {
                 // Update wallet balance
                 walletService.deductAmount(sourceWallet.getId(), paymentRequest.getAmount());
 
-                // Create transaction record
-                Transaction transaction = transactionService.createTransaction(
-                        sourceWallet,
-                        currentUser,
-                        savedPayment,
-                        paymentRequest.getAmount().negate(),
-                        "DEBIT",
-                        payment.getCategory(),
-                        paymentRequest.getMerchantName(),
-                        paymentRequest.getPaymentPurpose(),
-                        TransactionStatus.COMPLETED.name(),
-                        generateUpiReference()
-                );
+                transaction.setStatus(TransactionStatus.COMPLETED.name());
+                transaction.setFailureReason("NAN");
+                transactionService.updateTransaction(transaction);
 
-                // Update payment status
                 savedPayment.setPaymentStatus(PaymentStatus.COMPLETED.name());
-                savedPayment.setPaymentGatewayReference("PG-" + System.currentTimeMillis());
-                savedPayment.setGatewayResponse("Payment processed successfully");
+
             } else {
-                // Mark payment as failed
+
                 savedPayment.setPaymentStatus(PaymentStatus.FAILED.name());
-                savedPayment.setFailureReason("Payment gateway processing failed");
+                savedPayment = paymentRepository.save(savedPayment);
+
+                transaction.setStatus(TransactionStatus.FAILED.name());
+                transaction.setFailureReason("Payment gateway processing failed");
+                transactionService.updateTransaction(transaction);
             }
 
-            return paymentRepository.save(savedPayment);
+            return new PaymentResponseDTO(savedPayment,transaction.getFailureReason(), transaction.getId());
 
         } catch (Exception e) {
-            // Handle payment failure
             savedPayment.setPaymentStatus(PaymentStatus.FAILED.name());
-            savedPayment.setFailureReason(e.getMessage());
             paymentRepository.save(savedPayment);
+
+            transaction.setStatus(TransactionStatus.FAILED.name());
+            transaction.setFailureReason(e.getMessage());
+            transactionService.updateTransaction(transaction);
+
             throw new PaymentProcessingException("Payment processing failed: " + e.getMessage());
         }
     }
@@ -190,13 +183,7 @@ public class PaymentService {
         return "UPI" + System.currentTimeMillis() + Math.round(Math.random() * 1000);
     }
 
-    /**
-     * Validates payment against configured rules.
-     *
-     * @param payment The payment to validate
-     * @throws RuleViolationException if payment violates rules
-     */
-    public void validatePaymentAgainstRules(Payment payment) {
+    public void validatePaymentAgainstRules(Payment payment, Transaction transaction) {
         User user = payment.getInitiatedBy();
 
         // Check if user is a member (rules only apply to members)
@@ -206,18 +193,15 @@ public class PaymentService {
 
             if (owner != null) {
                 // Evaluate payment against applicable rules
-                List<RuleViolation> violations = ruleEngine.evaluatePayment(payment, owner.getId(), user.getId());
+                List<RuleViolation> violations = ruleEngine.evaluatePayment(payment, owner.getId(), user.getId(), transaction);
 
                 if (!violations.isEmpty()) {
                     // Save rule violations
                     boolean approvalTriggered = false;
                     boolean notityTriggered = false;
                     for (RuleViolation violation : violations) {
-//                        violation.setPayment(payment); // Associate violation with payment
+//
                         ruleViolationRepository.save(violation);
-
-                        System.out.println(violation.getRule().getOwner());
-                        System.out.println(payment);
 
                         for (RuleAction action : violation.getRule().getActions()) {
                             String actionType = action.getActionType();
@@ -228,8 +212,10 @@ public class PaymentService {
                                         violation.getRule().getMember(),
                                         violation.getRule().getOwner()
                                 );
+                                transaction.setStatus(TransactionStatus.PENDING_APPROVAL.name());
+                                transactionService.updateTransaction(transaction);
                                 approvalTriggered = true;
-                                break; // No need to process further actions
+                                break;
                             } else if ("NOTIFY".equals(actionType)) {
                                 notificationService.sendNotification(
                                         violation.getRule().getOwner(),
@@ -242,16 +228,18 @@ public class PaymentService {
                     }
 
                     if(!approvalTriggered && !notityTriggered){
-                        // Update payment status to FAILED
                         payment.setPaymentStatus(PaymentStatus.FAILED.name());
-                        payment.setFailureReason("Payment violates rules set by the owner");
+
+                        transaction.setStatus(TransactionStatus.FAILED.name());
+                        transaction.setFailureReason("Payment violates rules set by the owner");
+                        transactionService.updateTransaction(transaction);
+
                         paymentRepository.save(payment);
                     }
 
-                    // Throw exception to prevent further processing
-//                    if(!notityTriggered){
-                        throw new RuleViolationException("Payment violates rules set by the owner");
-//                    }
+
+                    throw new RuleViolationException("Payment violates rules set by the owner");
+
                 }
             }
         }
@@ -260,25 +248,24 @@ public class PaymentService {
 //    public Payment approvedPayment()
 
     @Transactional
-    public Payment processInternalTransfer(InternalTransferRequest transferRequest) {
-        // Get current authenticated user
+    public PaymentResponseDTO processInternalTransfer(InternalTransferRequest transferRequest) {
+
         User currentUser = getCurrentUser();
         User owner,member;
 
-        // Get source wallet (sender)
+        owner = userService.findByUsername(transferRequest.getOwnername());
+        member = userService.findByUsername(transferRequest.getMembername());
+
         Wallet sourceWallet,destinationWallet;
-        if (transferRequest.getOwnername() != null) {
-            owner=userRepository.findByUsername(transferRequest.getOwnername()).get();
+        if (owner != null) {
 
             sourceWallet = owner.getWallets();
-            // Verify user can access this wallet
             verifyWalletAccess(currentUser, sourceWallet);
+
         } else {
             sourceWallet = currentUser.getWallets();
         }
 
-        // Get destination wallet by UPI ID
-        member=userRepository.findByUsername(transferRequest.getMembername()).get();
         destinationWallet=member.getWallets();
 
         if (destinationWallet == null) {
@@ -303,18 +290,37 @@ public class PaymentService {
         payment.setInitiatedBy(currentUser);
         payment.setAmount(transferRequest.getAmount());
         payment.setPaymentMethod("UPI_TRANSFER");
-        payment.setPaymentPurpose("Transfered to member ny owner");
+        payment.setPaymentPurpose("Transfere to member by owner");
         payment.setCategory(null);
-        payment.setPaymentStatus("PROCESSING");
-
+        payment.setPaymentStatus(PaymentStatus.INITIATED.name());
         Payment savedPayment = paymentRepository.save(payment);
+
+        Transaction ownerTransaction = transactionService.createTransaction(
+                sourceWallet,
+                owner,
+                savedPayment,
+                transferRequest.getAmount().negate(),
+                "DEBIT",
+                payment.getCategory(),
+                member.getName(),
+                "Transfer to " + destinationWallet.getUpiId(),
+                TransactionStatus.INITIATED.name(),
+                destinationWallet.getUpiId()
+        );
 
         // Check if this payment requires rule validation
         try {
-            validatePaymentAgainstRules(savedPayment);
+            validatePaymentAgainstRules(savedPayment,ownerTransaction);
         } catch (RuleViolationException e) {
-            // If rules are violated, return the payment without further processing
-            return savedPayment;
+
+            ownerTransaction.setStatus(TransactionStatus.FAILED.name());
+            ownerTransaction.setFailureReason(e.getMessage());
+            transactionService.updateTransaction(ownerTransaction);
+
+            savedPayment.setPaymentStatus(PaymentStatus.FAILED.name());
+            savedPayment = paymentRepository.save(savedPayment);
+
+            return new PaymentResponseDTO(savedPayment,ownerTransaction.getFailureReason(), ownerTransaction.getId());
         }
 
         try {
@@ -325,51 +331,44 @@ public class PaymentService {
             walletService.addAmount(destinationWallet.getId(), transferRequest.getAmount());
 
             // Update payment status
-            savedPayment.setPaymentStatus("COMPLETED");
-            savedPayment.setPaymentGatewayReference("INTERNAL-" + System.currentTimeMillis());
+            savedPayment.setPaymentStatus(PaymentStatus.COMPLETED.name());
 
-            // Create sender transaction (debit)
-            Transaction senderTransaction = transactionService.createTransaction(
-                    sourceWallet,
-                    currentUser,
-                    savedPayment,
-                    transferRequest.getAmount().negate(),
-                    "DEBIT",
-                    null,
-                    null,
-                    "Transfer to " + destinationWallet.getUpiId(),
-                    "COMPLETED",
-                    null
-            );
+            ownerTransaction.setStatus(TransactionStatus.COMPLETED.name());
+            ownerTransaction.setFailureReason("NAN");
+            transactionService.updateTransaction(ownerTransaction);
 
-            // Create receiver transaction (credit)
-            Transaction receiverTransaction = transactionService.createTransaction(
-                    destinationWallet,
-                    destinationWallet.getUser(),
+            Transaction memberTransaction = transactionService.createTransaction(
+                    member.getWallets(),
+                    member,
                     savedPayment,
-                    transferRequest.getAmount(),
+                    transferRequest.getAmount().plus(),
                     "CREDIT",
-                    null,
-                    null,
+                    payment.getCategory(),
+                    owner.getName(),
                     "Transfer from " + sourceWallet.getUpiId(),
-                    "COMPLETED",
-                    null
+                    TransactionStatus.COMPLETED.name(),
+                    sourceWallet.getUpiId()
             );
+            memberTransaction.setFailureReason("NAN");
+            transactionService.updateTransaction(memberTransaction);
 
-            return paymentRepository.save(savedPayment);
+            savedPayment = paymentRepository.save(savedPayment);
+
+            return new PaymentResponseDTO(savedPayment,ownerTransaction.getFailureReason(), ownerTransaction.getId());
 
         } catch (Exception e) {
-            // Handle payment failure
             savedPayment.setPaymentStatus("FAILED");
-            savedPayment.setFailureReason(e.getMessage());
             paymentRepository.save(savedPayment);
+
+            ownerTransaction.setStatus(TransactionStatus.FAILED.name());
+            ownerTransaction.setFailureReason(e.getMessage());
+            transactionService.updateTransaction(ownerTransaction);
+
             throw new PaymentProcessingException("Transfer processing failed: " + e.getMessage());
         }
     }
 
     private boolean processPaymentGateway(Payment payment) {
-        // This would integrate with a real payment gateway
-        // For simulation, we'll assume success for most payments
         return true;
     }
 
@@ -396,6 +395,4 @@ public class PaymentService {
         String username = authentication.getName();
         return userService.findByUsername(username);
     }
-
-    // Additional methods for querying payment history, etc.
 }

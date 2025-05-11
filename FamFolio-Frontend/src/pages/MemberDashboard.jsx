@@ -15,6 +15,16 @@ import {
   PlusCircle,
   Info,
   X,
+  Home,
+  Smartphone,
+  Car,
+  Heart,
+  Shield,
+  Film,
+  Plane,
+  User,
+  TrendingUp,
+  Users
 } from "lucide-react"
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from "recharts"
 
@@ -60,6 +70,15 @@ const MemberDashboard = () => {
           }
         )
 
+        const categoryResponse = await axios.get(
+          `http://localhost:8080/api/transactions/categorySpendingSummary/${username}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        )
+
         const wallet = walletResponse.data
         setWalletData(wallet)
 
@@ -76,25 +95,80 @@ const MemberDashboard = () => {
               year: "numeric"
             }),
             merchantName: tx.merchantName,
-            createdAt: tx.createdAt
+            createdAt: tx.createdAt,
+            status: tx.status,
+            failureReason: tx.failureReason 
           }))
           .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) // Sort by date newest first
 
         setTransactions(debitTransactions)
+        let categorySpending = [];
+
+    
+        // Check if the API returned data in expected format
+        if (categoryResponse.data && Array.isArray(categoryResponse.data)) {
+          categorySpending = categoryResponse.data
+            .map(item => ({
+              name: item.category,
+              value:  Math.abs(item.totalAmount),
+              color: categoryColors[item.category] || "#6B7280" // Default gray if category not found
+            }))
+            .filter(item => item.value > 0)
+            .sort((a, b) => b.value - a.value); // Sort by highest spending first
+        } else {
+          // Fallback: Group transactions by category if API doesn't provide aggregated data
+          const categoryMap = {};
+          transactionsResponse.data.forEach(tx => {
+            if (tx.transactionType === "DEBIT" && tx.status === "COMPLETED") {
+              const category = tx.category || "Other";
+              if (!categoryMap[category]) {
+                categoryMap[category] = 0;
+              }
+              categoryMap[category] += Math.abs(tx.amount);
+            }
+          });
+
+          categorySpending = Object.keys(categoryMap)
+            .filter(category => categoryMap[category] > 0)
+            .map(category => ({
+              name: category,
+              value: categoryMap[category],
+              color: categoryColors[category] || "#6B7280"
+            }))
+            .sort((a, b) => b.value - a.value);
+        }
+
+        console.log(categorySpending)
+
+        // Limit to top 5-7 categories for better visualization
+        let topCategories = categorySpending;
+        if (categorySpending.length > 6) {
+          topCategories = categorySpending.slice(0, 6);
+        
+          // If there are more categories, add an "Other" category
+          const otherTotal = categorySpending
+                .slice(6)
+                .reduce((sum, category) => sum + category.value, 0);
+              
+            if (otherTotal > 0) {
+              topCategories.push({
+                name: "Other",
+                value: otherTotal,
+                color: "#6B7280" // Gray for "Other"
+              });
+            }
+        }
 
         // Mock data for other parts of the dashboard
         // (You'll want to replace this with actual API calls)
         const mockData = {
           memberName: username,
-          walletBalance: wallet.balance - wallet.spent,
-          walletLimit: wallet.balance,
+          walletBalance: wallet.balance,
+          walletLimit: wallet.balance + wallet.spent,
           notifications: 2,
-          categorySpending: [
-            { name: "Food", value: 1050, color: "#38bdf8" },
-            { name: "Education", value: 1750, color: "#818cf8" },
-            { name: "Games", value: 899, color: "#c084fc" },
-            { name: "Shopping", value: 1500, color: "#e879f9" },
-            { name: "Gifts", value: 800, color: "#fb7185" },
+          categorySpending: topCategories.length > 0 ? topCategories : [
+            // Fallback mock data if no categories have spending
+            { name: "No Spending Data", value: 100, color: "#CBD5E1" }
           ],
           tips: [
             {
@@ -118,6 +192,7 @@ const MemberDashboard = () => {
           ],
         }
 
+        
         setMemberData(mockData)
         setLoading(false)
       } catch (error) {
@@ -136,7 +211,41 @@ const MemberDashboard = () => {
     }, 5000)
 
     return () => clearInterval(tipInterval)
-  }, [memberData?.tips])
+  }, [])
+
+  useEffect(() => {
+  if (!memberData?.tips) return;
+  
+  // Auto-rotate tips every 5 seconds
+  const tipInterval = setInterval(() => {
+    setActiveTipIndex((prev) => (prev + 1) % memberData.tips.length)
+  }, 5000)
+
+  return () => clearInterval(tipInterval)
+}, [memberData])
+
+const categoryColors = {
+  "Dining Out": "#FF6384",          // Vibrant pink
+  "Rent/Mortgage": "#36A2EB",       // Bright blue
+  "Utilities": "#FFCE56",           // Golden yellow
+  "Internet & Phone": "#9966FF",    // Purple
+  "Transportation": "#4BC0C0",      // Teal
+  "Car Expenses": "#FF9F40",        // Orange
+  "Health & Fitness": "#41E0B2",    // Mint green
+  "Medical": "#FF6B8B",             // Soft pink
+  "Insurance": "#5A5AAD",           // Medium blue-purple
+  "Entertainment": "#C45850",       // Brick red
+  "Shopping": "#8AC249",            // Lime green
+  "Travel": "#00B3A1",              // Dark cyan
+  "Education": "#B370E6",           // Lavender
+  "Gifts & Donations": "#FFA07A",   // Light salmon
+  "Personal Care": "#7AC5CD",       // Sky blue
+  "Home Maintenance": "#A0522D",    // Sienna brown
+  "Investments": "#2E8B57",         // Sea green
+  "Childcare": "#FFD700",           // Gold
+  "Pet Care": "#DA70D6",            // Orchid pink
+  "Gaming": "#6495ED"               // Cornflower blue
+};
 
   if (loading) {
     return (
@@ -195,8 +304,56 @@ const MemberDashboard = () => {
     day: "numeric",
   })
 
-  // Get icon based on transaction description
-  const getTransactionIcon = (description) => {
+  
+
+  const getTransactionIcon = (description, category) => {
+  // First check category
+  if (category) {
+    switch(category) {
+      case "Dining Out":
+        return <Coffee size={16} />;
+      case "Rent/Mortgage":
+      case "Utilities":
+      case "Home Maintenance":
+        return <Home size={16} />;
+      case "Internet & Phone":
+        return <Smartphone size={16} />;
+      case "Transportation":
+      case "Car Expenses":
+        return <Car size={16} />;
+      case "Health & Fitness":
+      case "Medical":
+        return <Heart size={16} />;
+      case "Insurance":
+        return <Shield size={16} />;
+      case "Entertainment":
+        return <Film size={16} />;
+      case "Shopping":
+        return <ShoppingBag size={16} />;
+      case "Travel":
+        return <Plane size={16} />;
+      case "Education":
+        return <Book size={16} />;
+      case "Gifts & Donations":
+        return <Gift size={16} />;
+      case "Personal Care":
+        return <User size={16} />;
+      case "Investments":
+        return <TrendingUp size={16} />;
+      case "Childcare":
+        return <Users size={16} />;
+      case "Pet Care":
+        return <Users size={16} />;
+      case "Gaming":
+        return <Gamepad size={16} />;
+      default:
+        // Fall back to checking description
+        break;
+    }
+  }
+
+  // Fallback to original logic
+  if (description) {
     if (description.toLowerCase().includes("food")) {
       return <Coffee size={16} />
     } else if (description.toLowerCase().includes("transfer")) {
@@ -210,10 +367,12 @@ const MemberDashboard = () => {
     } else if (description.toLowerCase().includes("gift")) {
       return <Gift size={16} />
     } else if (description.toLowerCase().includes("transport")) {
-      return <PlusCircle size={16} />
+      return <Car size={16} />
     }
-    return <DollarSign size={16} />
   }
+  
+  return <DollarSign size={16} />
+}
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 to-white p-4 md:p-6">
@@ -310,30 +469,55 @@ const MemberDashboard = () => {
 
             <div className="flex flex-col gap-3">
               {recentTransactions.length > 0 ? (
-                recentTransactions.map((transaction, index) => (
-                  <motion.div
-                    key={transaction.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    whileHover={{ scale: 1.02, backgroundColor: "rgba(239, 246, 255, 0.6)" }}
-                    className="flex items-center gap-3 rounded-lg border border-gray-100 p-3"
-                  >
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
-                      {getTransactionIcon(transaction.description)}
-                    </div>
+              recentTransactions.map((transaction, index) => (
+                <motion.div
+                  key={transaction.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ scale: 1.02, backgroundColor: "rgba(239, 246, 255, 0.6)" }}
+                  className={`flex items-center gap-3 rounded-lg border p-3 ${
+                    transaction.status === "FAILED" 
+                      ? "border-red-200 bg-red-50" 
+                      : "border-gray-100"
+                  }`}
+                >
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                    transaction.status === "FAILED" 
+                      ? "bg-red-100 text-red-600" 
+                      : "bg-blue-100 text-blue-600"
+                  }`}>
+                    {getTransactionIcon(transaction.description)}
+                  </div>
 
-                    <div className="flex-1">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
                       <p className="font-medium text-gray-800">{transaction.description}</p>
-                      <p className="text-xs text-gray-500">{transaction.date}</p>
+                      {transaction.status === "FAILED" && (
+                        <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-600">
+                          Failed
+                        </span>
+                      )}
                     </div>
+                    <p className="text-xs text-gray-500">{transaction.date}</p>
+                    {transaction.status === "FAILED" && transaction.failureReason && (
+                      <p className="text-xs text-red-500">Reason: {transaction.failureReason}</p>
+                    )}
+                  </div>
 
-                    <p className="font-medium text-red-600">-₹{transaction.amount.toFixed(2)}</p>
-                  </motion.div>
-                ))
-              ) : (
-                <p className="text-center text-gray-500 py-4">No transactions found</p>
-              )}
+                  <p className={`font-medium ${
+                    transaction.transactionType === "CREDIT" 
+                      ? "text-green-600" 
+                      : "text-red-600"
+                  }`}>
+                    {transaction.transactionType === "CREDIT" ? "+" : "-"}
+                    ₹{transaction.amount.toFixed(2)}
+                  </p>
+                </motion.div>
+              ))
+            ) : (
+              <p className="text-center text-gray-500 py-4">No transactions found</p>
+            )}
             </div>
           </motion.div>
 
@@ -356,9 +540,15 @@ const MemberDashboard = () => {
                       animationBegin={200}
                       animationDuration={1000}
                     >
-                      {memberData.categorySpending.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
+                      
+                        {memberData.categorySpending.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                        <RechartsTooltip
+                          formatter={(value) => [`₹${value} (${Math.round((value / totalSpent) * 100)}%)`, "Amount"]}
+                          labelFormatter={(index) => memberData.categorySpending[index].name}
+                        />
+                    
                     </Pie>
                     <RechartsTooltip
                       formatter={(value) => [`₹${value} (${Math.round((value / totalSpent) * 100)}%)`, "Amount"]}
@@ -436,31 +626,56 @@ const MemberDashboard = () => {
             <div className="max-h-[70vh] overflow-y-auto pr-2">
               <div className="flex flex-col gap-3">
                 {allTransactions.length > 0 ? (
-                  allTransactions.map((transaction) => (
-                    <motion.div
-                      key={transaction.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="flex items-center gap-3 rounded-lg border border-gray-100 p-3 hover:bg-blue-50"
-                    >
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
-                        {getTransactionIcon(transaction.description)}
-                      </div>
+                    allTransactions.map((transaction) => (
+                      <motion.div
+                        key={transaction.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`flex items-center gap-3 rounded-lg border p-3 hover:bg-blue-50 ${
+                          transaction.status === "FAILED" 
+                            ? "border-red-200 bg-red-50" 
+                            : "border-gray-100"
+                        }`}
+                      >
+                        <div className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                          transaction.status === "FAILED" 
+                            ? "bg-red-100 text-red-600" 
+                            : "bg-blue-100 text-blue-600"
+                        }`}>
+                          {getTransactionIcon(transaction.description)}
+                        </div>
 
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-800">{transaction.description}</p>
-                        <p className="text-xs text-gray-500">{transaction.date}</p>
-                        {transaction.merchantName && (
-                          <p className="text-xs text-gray-500">Merchant: {transaction.merchantName}</p>
-                        )}
-                      </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-gray-800">{transaction.description}</p>
+                            {transaction.status === "FAILED" && (
+                              <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-600">
+                                Failed
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-500">{transaction.date}</p>
+                          {transaction.merchantName && (
+                            <p className="text-xs text-gray-500">Merchant: {transaction.merchantName}</p>
+                          )}
+                          {transaction.status === "FAILED" && transaction.failureReason && (
+                            <p className="text-xs text-red-500">Reason: {transaction.failureReason}</p>
+                          )}
+                        </div>
 
-                      <p className="font-medium text-red-600">-₹{transaction.amount.toFixed(2)}</p>
-                    </motion.div>
-                  ))
-                ) : (
-                  <p className="text-center text-gray-500 py-4">No transactions found</p>
-                )}
+                        <p className={`font-medium ${
+                          transaction.transactionType === "CREDIT" 
+                            ? "text-green-600" 
+                            : "text-red-600"
+                        }`}>
+                          {transaction.transactionType === "CREDIT" ? "+" : "-"}
+                          ₹{transaction.amount.toFixed(2)}
+                        </p>
+                      </motion.div>
+                    ))
+                  ) : (
+                    <p className="text-center text-gray-500 py-4">No transactions found</p>
+                  )}
               </div>
             </div>
           </motion.div>
