@@ -27,7 +27,7 @@ public class AadhaarInitializer {
                     new AadhaarRecord("789056789123", "Aditi Choudhary", LocalDate.of(1999, 4, 25), "Female", "aditi.choudhary@example.com", "914321098765"),
                     new AadhaarRecord("890167891234", "Reyansh Kumar", LocalDate.of(2002, 9, 12), "Male", "reyansh.kumar@example.com", "913210987654"),
                     new AadhaarRecord("901278912345", "Aaradhya Joshi", LocalDate.of(1975, 3, 30), "Female", "yashgokulgandhi6@gmail.com", "912109876543"),
-                    new AadhaarRecord("012389123456", "Mohit Malhotra", LocalDate.of(1992, 8, 17), "Male", "mohit.malhotra@example.com", "911098765432"),
+                    new AadhaarRecord("012389123456", "Mohit Malhotra", LocalDate.of(1992, 8, 17), "Male", "yashgokulgandhi6@gmail.com", "911098765432"),
                     new AadhaarRecord("123490123456", "Kavya Iyer", LocalDate.of(1983, 6, 21), "Female", "kavya.iyer@example.com", "910987654321")
             );
 

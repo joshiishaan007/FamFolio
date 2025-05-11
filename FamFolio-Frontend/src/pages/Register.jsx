@@ -93,9 +93,9 @@ const Register = () => {
       const response = await axios.post("http://localhost:8080/api/users/register", payload);
       
       // Store token and username in localStorage
-      localStorage.setItem("jwt", response.data.token);
+     localStorage.setItem("jwt", response.data.token);
       localStorage.setItem("username", response.data.user.username);
-      
+      localStorage.setItem("role", "OWNER");
       // Navigate to home page on successful registration
       navigate("/");
     } catch (err) {
