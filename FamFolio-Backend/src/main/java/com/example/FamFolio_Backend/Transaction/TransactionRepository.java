@@ -2,6 +2,7 @@ package com.example.FamFolio_Backend.Transaction;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -44,6 +45,12 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate
     );
+
+    @Query("SELECT new map(t.category.name as category, SUM(t.amount) as totalAmount) " +
+            "FROM Transaction t " +
+            "WHERE t.user.username = :username AND t.status = 'COMPLETED'" +
+            "GROUP BY t.category.name")
+    List<Map<String, Object>> getCategorySpendingSummary(@Param("username") String username);
 
     List<Transaction> findByWalletIdAndStatus(Long id, String approvalPending);
 }

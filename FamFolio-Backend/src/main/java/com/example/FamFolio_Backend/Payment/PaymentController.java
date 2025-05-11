@@ -20,14 +20,14 @@ public class PaymentController {
     @PostMapping("/external")
     @PreAuthorize("hasAnyRole('OWNER', 'MEMBER')")
     public ResponseEntity<PaymentResponseDTO> processExternalPayment(@Valid @RequestBody PaymentRequestDTO paymentRequest) {
-        Payment payment = paymentService.processExternalPayment(paymentRequest);
-        return ResponseEntity.ok(new PaymentResponseDTO(payment));
+        PaymentResponseDTO payment = paymentService.processExternalPayment(paymentRequest);
+        return ResponseEntity.ok(payment);
     }
 
     @PostMapping("/transfer")
     @PreAuthorize("hasAnyRole('OWNER', 'MEMBER')")
     public ResponseEntity<PaymentResponseDTO> processInternalTransfer(@Valid @RequestBody InternalTransferRequest transferRequest) {
-        Payment payment = paymentService.processInternalTransfer(transferRequest);
-        return ResponseEntity.ok(new PaymentResponseDTO(payment));
+        PaymentResponseDTO payment = paymentService.processInternalTransfer(transferRequest);
+        return ResponseEntity.ok(payment);
     }
 }

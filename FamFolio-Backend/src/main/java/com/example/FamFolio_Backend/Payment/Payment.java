@@ -58,15 +58,6 @@ public class Payment {
 	@Column(name = "payment_status", nullable = false)
 	private String paymentStatus;
 
-	@Column(name = "failure_reason")
-	private String failureReason;
-
-	@Column(name = "payment_gateway_reference")
-	private String paymentGatewayReference;
-
-	@Column(name = "gateway_response")
-	private String gatewayResponse;
-
 	@Column(name = "location")
 	private String location;
 
@@ -169,30 +160,6 @@ public class Payment {
 
 	public void setPaymentStatus(String paymentStatus) {
 		this.paymentStatus = paymentStatus;
-	}
-
-	public String getFailureReason() {
-		return failureReason;
-	}
-
-	public void setFailureReason(String failureReason) {
-		this.failureReason = failureReason;
-	}
-
-	public String getPaymentGatewayReference() {
-		return paymentGatewayReference;
-	}
-
-	public void setPaymentGatewayReference(String paymentGatewayReference) {
-		this.paymentGatewayReference = paymentGatewayReference;
-	}
-
-	public String getGatewayResponse() {
-		return gatewayResponse;
-	}
-
-	public void setGatewayResponse(String gatewayResponse) {
-		this.gatewayResponse = gatewayResponse;
 	}
 
 	public String getLocation() {

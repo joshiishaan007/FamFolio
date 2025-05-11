@@ -5,6 +5,7 @@ import com.example.FamFolio_Backend.Payment.Payment;
 import com.example.FamFolio_Backend.RuleAction.RuleAction;
 import com.example.FamFolio_Backend.RuleCondition.RuleCondition;
 import com.example.FamFolio_Backend.RuleViolation.RuleViolation;
+import com.example.FamFolio_Backend.Transaction.Transaction;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +30,7 @@ public class RuleEngine {
         this.ruleRepository = ruleRepository;
     }
 
-    public List<RuleViolation> evaluatePayment(Payment payment, Long ownerId, Long memberId) {
+    public List<RuleViolation> evaluatePayment(Payment payment, Long ownerId, Long memberId, Transaction transaction) {
         List<RuleViolation> violations = new ArrayList<>();
 
         // Get all active rules for this member
@@ -52,11 +53,12 @@ public class RuleEngine {
                 boolean shouldBlock = evaluateRuleActions(rule, payment);
 
                 if (shouldBlock) {
+
                     RuleViolation violation = new RuleViolation();
                     violation.setRule(rule);
                     violation.setCreatedAt(LocalDateTime.now());
                     violation.setViolationNotes("Payment violates rule: " + rule.getRuleName());
-
+                    violation.setTransaction(transaction);
                     violations.add(violation);
 
                     logger.info("Rule violation detected - Rule: {}, Payment: {}",
@@ -99,7 +101,6 @@ public class RuleEngine {
             case "MERCHANT":
                 return evaluateMerchantCondition(condition, payment.getMerchantName());
             case "CUSTOM":
-                // Custom conditions would require specific implementation
                 return true;
             default:
                 logger.warn("Unknown condition type: {}", condition.getConditionType());

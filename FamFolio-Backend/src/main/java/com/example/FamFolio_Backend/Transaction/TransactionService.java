@@ -5,26 +5,22 @@ import com.example.FamFolio_Backend.Exception.UserNotFoundException;
 import com.example.FamFolio_Backend.Payment.Payment;
 import com.example.FamFolio_Backend.Security.JwtUtil;
 import com.example.FamFolio_Backend.Wallet.Wallet;
-import com.example.FamFolio_Backend.Exception.ResourceNotFoundException;
 import com.example.FamFolio_Backend.Exception.UnauthorizedAccessException;
 import com.example.FamFolio_Backend.user.User;
 import com.example.FamFolio_Backend.UserRelationship.UserRelationshipService;
 import com.example.FamFolio_Backend.user.UserRepository;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.query.Param;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 
 @Service
 public class TransactionService {
@@ -70,6 +66,15 @@ public class TransactionService {
         transaction.setUpiReference(upiReference);
 
         return transactionRepository.save(transaction);
+    }
+
+    public void updateTransaction (Transaction transaction){
+        transactionRepository.save(transaction);
+    }
+
+    public List<Map<String, Object>> getCategorySpendingSummary(String username){
+
+        return transactionRepository.getCategorySpendingSummary(username);
     }
 
     public Page<Transaction> getTransactionsForUser(Long userId, Pageable pageable) {

@@ -7,11 +7,13 @@ import com.example.FamFolio_Backend.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -20,26 +22,31 @@ public class TransactionController {
 
     private final TransactionService transactionService;
      private final UserRelationshipController userRelationshipController;
-    private final UserRepository userRepository;
+    private final UserService userService;
     @Autowired
-    public TransactionController(TransactionService transactionService,UserRepository userRepository,UserRelationshipController userRelationshipController) {
+    public TransactionController(TransactionService transactionService,UserService userService,UserRelationshipController userRelationshipController) {
         this.transactionService = transactionService;
-        this.userRepository = userRepository;
+        this.userService = userService;
         this.userRelationshipController = userRelationshipController;
     }
 
     @GetMapping("/user/{username}")
     public ResponseEntity<?> getUserTransactions(
             @PathVariable String username) {
-               User user=userRepository.findByUsername(username).get();
+               User user = userService.findByUsername(username);
 
         return ResponseEntity.ok(transactionService.getTransactionById(user.getId()));
+    }
+
+    @GetMapping("/categorySpendingSummary/{username}")
+    public ResponseEntity<List<Map<String,Object>>> getCategorySpendingSummary(@PathVariable String username){
+        return ResponseEntity.ok(transactionService.getCategorySpendingSummary(username));
     }
 
     @GetMapping("/users/{username}")
     public ResponseEntity<?> getUserTransactionsAllUsers(
             @PathVariable String username) {
-        User user=userRepository.findByUsername(username).get();
+        User user = userService.findByUsername(username);
    List<Long> members=userRelationshipController.getIdByOwnerUsername(username);
    members.add(user.getId());
    System.out.println(members);
