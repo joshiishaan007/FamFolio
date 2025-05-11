@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Confetti from 'react-confetti';
 import axios from 'axios';
+import { axiosInstance } from '../App';
 
 const MerchantPayment = () => {
   const [formData, setFormData] = useState({
@@ -35,7 +36,7 @@ const MerchantPayment = () => {
 
   // Fetch categories from API
   useEffect(() => {
-    axios.get(`http://localhost:8080/api/categories`)
+    axiosInstance.get(`/api/categories`)
       .then(response => {
         setCategories(response.data);
       })
@@ -148,8 +149,8 @@ const MerchantPayment = () => {
       };
       
       // Make API call with credentials and token
-      const response = await axios.post(
-        `http://localhost:8080/api/payments/external`, 
+      const response = await axiosInstance.post(
+        `/api/payments/external`, 
         payload,
         { 
           headers,
@@ -162,7 +163,7 @@ const MerchantPayment = () => {
         // setTimeout(() => setPaymentStatus(null), 5000);
       } else {
         setPaymentStatus('failure');
-        axios.get(`http://localhost:8080/api/ruleViolations/${response.data.transactionId}`)
+        axiosInstance.get(`/api/ruleViolations/${response.data.transactionId}`)
           .then(response => {
             setErrorMessage(response.data);
           })

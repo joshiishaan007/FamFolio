@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { motion } from "framer-motion"
 import axios from "axios"
+import { axiosInstance } from "../App"
  import { useLocation, useNavigate } from "react-router-dom" //
 const Otp = ({ userData }) => {
   const [otp, setOtp] = useState(["", "", "", "", "", ""])
@@ -83,8 +84,8 @@ const Otp = ({ userData }) => {
 
     try {
      
-      const response = await axios.post(
-        "http://localhost:8080/api/aadhaar/validateOtp",
+      const response = await axiosInstance.post(
+        "/api/aadhaar/validateOtp",
         {
           aadhaarNumber: aadharNumber,
           otp: otpValue

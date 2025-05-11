@@ -4,7 +4,8 @@ import { useState } from "react"
 import { motion } from "framer-motion"
 import axios from "axios"
 // or
-import { useNavigate } from "react-router-dom" // If using React Router
+import { useNavigate } from "react-router-dom"
+import { axiosInstance } from '../App'; 
 
 const AadharVerification = () => {
   const [formData, setFormData] = useState({
@@ -51,8 +52,19 @@ const AadharVerification = () => {
     setIsLoading(true)
     
     try {
-      const response = await axios.post(
-        "http://localhost:8080/api/aadhaar/verify",
+      // const response = await axios.post(
+      //   "http://localhost:8080/api/aadhaar/verify",
+      //   formData.aadharNumber,
+      //   { 
+      //     withCredentials: true,
+      //     headers: {
+      //       'Content-Type': 'text/plain'
+      //     }
+      //   }
+      // )
+
+      const response = await axiosInstance.post(
+        "/api/aadhaar/verify",
         formData.aadharNumber,
         { 
           withCredentials: true,

@@ -4,6 +4,7 @@ import { useState } from "react"
 import { CreditCard, Wallet } from "lucide-react"
 import axios from "axios"
 import { useNavigate } from "react-router-dom"
+import { axiosInstance } from "../App"
 
 const LinkWallet = () => {
   const navigate = useNavigate()
@@ -103,8 +104,19 @@ const LinkWallet = () => {
 
       console.log(requestBody)
       // Make the API call
-      await axios.put(
-        `http://localhost:8080/api/wallets/update-balance/${username}`,
+      // await axios.put(
+      //   `http://localhost:8080/api/wallets/update-balance/${username}`,
+      //   requestBody,
+      //   {
+      //     headers: {
+      //       "Authorization": `Bearer ${jwtToken}`,
+      //       "Content-Type": "application/json"
+      //     }
+      //   }
+      // )
+
+       await axiosInstance.put(
+        `/api/wallets/update-balance/${username}`,
         requestBody,
         {
           headers: {
@@ -113,7 +125,6 @@ const LinkWallet = () => {
           }
         }
       )
-
       // If successful, redirect to home page
       navigate("/")
     } catch (error) {

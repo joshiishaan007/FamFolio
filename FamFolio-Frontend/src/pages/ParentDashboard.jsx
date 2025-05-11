@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
+import { axiosInstance } from "../App";
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -45,38 +46,32 @@ const fetchDashboardData = async () => {
     }
 
     // Fetch parent wallet data
-    const parentWalletResponse = await fetch(
-      `http://localhost:8080/api/wallets/user/username/${username}`,
-      {
-        headers: {
-          Authorization: `Bearer ${jwtToken}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+       const parentWalletResponse = await axiosInstance.get(`/api/wallets/user/username/${username}`, {
+  headers: {
+    Authorization: `Bearer ${jwtToken}`,
+    "Content-Type": "application/json"
+  }
+});
 
     if (!parentWalletResponse.ok) {
       throw new Error("Failed to fetch parent wallet data");
     }
 
-    const parentWalletData = await parentWalletResponse.json();
+    const parentWalletData = await parentWalletResponse.data;
 
     // Fetch member wallets data
-    const memberWalletsResponse = await fetch(
-      `http://localhost:8080/api/relationships/memberwallets/${username}`,
-      {
-        headers: {
-          Authorization: `Bearer ${jwtToken}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+   const memberWalletsResponse = await axiosInstance.get(`/api/relationships/memberwallets/${username}`, {
+  headers: {
+    Authorization: `Bearer ${jwtToken}`,
+    "Content-Type": "application/json"
+  }
+});
 
     if (!memberWalletsResponse.ok) {
       throw new Error("Failed to fetch member wallet data");
     }
 
-    const memberWalletsData = await memberWalletsResponse.json();
+    const memberWalletsData = await memberWalletsResponse.data;
 
     console.log(memberWalletsData);
     // Transform the API response to match your existing data structure
@@ -173,8 +168,8 @@ const ParentDashboard = () => {
 
       if (!username || !jwtToken) return;
 
-      const response = await axios.get(
-        `http://localhost:8080/api/transactions/users/${username}`,
+      const response = await axiosInstance.get(
+        `/api/transactions/users/${username}`,
         {
           headers: {
             Authorization: `Bearer ${jwtToken}`,
@@ -246,8 +241,8 @@ const ParentDashboard = () => {
       }
 
       // Call the transfer API with axios
-      const response = await axios.post(
-        "http://localhost:8080/api/payments/transfer",
+      const response = await axiosInstance.post(
+        "/api/payments/transfer",
         {
           ownername: username,
           membername: selectedWallet.username,

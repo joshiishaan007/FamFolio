@@ -19,6 +19,11 @@ import MerchantTransaction from './pages/MerchantTransaction'
 import AdminDashboard from './pages/AdminDashboard'
 import RulesPage from './pages/RulesPage'
 import ViewTransaction from './pages/ViewTransaction'
+import axios from 'axios'
+
+export const axiosInstance = axios.create({
+  baseURL: 'https://famfolio-1.onrender.com',
+});
 
 const ProtectedRoute = ({ children, requiredRole = null }) => {
   const navigate = useNavigate();
@@ -105,7 +110,7 @@ function App() {
                   }/>
                 </Routes>
               </main>
-              <Footer />
+              
             </>
           }/>
           

@@ -7,6 +7,7 @@ import Header from "../components/Header"
 import Footer from "../components/Footer"
 import { useNavigate } from "react-router-dom"
 
+
 const HomePage = () => {
   return (
     <div className="bg-gradient-to-b from-blue-50 to-blue-100 min-h-screen">

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { axiosInstance } from "../App";
 
 const CreditCardIcon = () => (
   <svg
@@ -64,17 +65,25 @@ const Login = () => {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:8080/api/users/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: formData.username,
-          password: formData.password,
-        }),
-      });
-
+      // const response = await fetch("http://localhost:8080/api/users/login", {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //   },
+      //   body: JSON.stringify({
+      //     username: formData.username,
+      //     password: formData.password,
+      //   }),
+      // });
+      
+      const response = await axiosInstance.post("/api/users/login", {
+  username: formData.username,
+  password: formData.password,
+}, {
+  headers: {
+    "Content-Type": "application/json",
+  }
+});
       const data = await response.json();
 
       if (!response.ok) {

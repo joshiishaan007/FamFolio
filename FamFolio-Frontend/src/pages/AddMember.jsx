@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { UserPlus, Mail, User, CreditCard, Phone, Calendar, Lock, Eye, EyeOff } from "lucide-react"
 import axios from "axios"
+import { axiosInstance } from "../App"
 
 const AddMember = () => {
   // Form state
@@ -154,8 +155,19 @@ const AddMember = () => {
       }
 
       // Make the API call
-      const response = await axios.post(
-        `http://localhost:8080/api/users/register/${ownerUsername}`,
+      // const response = await axios.post(
+      //   `http://localhost:8080/api/users/register/${ownerUsername}`,
+      //   requestBody,
+      //   {
+      //     headers: {
+      //       "Authorization": `Bearer ${jwtToken}`,
+      //       "Content-Type": "application/json"
+      //     }
+      //   }
+      // )
+
+       const response = await axiosInstance.post(
+        `/api/users/register/${ownerUsername}`,
         requestBody,
         {
           headers: {

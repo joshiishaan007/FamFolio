@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { axiosInstance } from "../App"
 
 const ViewTransaction = () => {
   const [transactions, setTransactions] = useState([])
@@ -16,13 +17,17 @@ const ViewTransaction = () => {
       try {
         setLoading(true)
         const username = localStorage.getItem("username") || "defaultUser"
-        const response = await fetch(`/api/transaction/${username}`)
+        const response = await axiosInstance.get(`/api/transaction/${username}`);
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch transactions")
-        }
+if (response.status !== 200) {
+  throw new Error("Failed to fetch transactions");
+}
 
-        const data = await response.json()
+// Example: access the data
+
+
+
+        const data = await response.data
         setTransactions(data)
       } catch (err) {
         setError(err.message)

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import axios from "axios"
+import { axiosInstance } from "../App"
 
 const RulesPage = () => {
   // State for form data
@@ -50,7 +51,7 @@ const RulesPage = () => {
 
       try {
         setIsLoading(true)
-        const response = await axios.get(`http://localhost:8080/api/relationships/family/${name}`, getAuthHeaders())
+        const response = await axiosInstance.get(`/api/relationships/family/${name}`, getAuthHeaders())
         setFamilyMembers(response.data)
       } catch (error) {
         console.error("Error fetching family members:", error)
@@ -520,7 +521,7 @@ const RulesPage = () => {
       }
 
       // Post the rule to API
-      const response = await axios.post(`http://localhost:8080/api/rules`, ruleData, getAuthHeaders())
+      const response = await axiosInstance.post(`/api/rules`, ruleData, getAuthHeaders())
       
       console.log("Rule created successfully:", response.data)
       alert("Rule created successfully:", response.data)

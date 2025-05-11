@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import axios from "axios"
+import { axiosInstance } from "../App"
 import {
   Bell,
   CreditCard,
@@ -51,8 +52,8 @@ const MemberDashboard = () => {
         }
 
         // Fetch wallet data
-        const walletResponse = await axios.get(
-          `http://localhost:8080/api/wallets/user/username/${username}`,
+        const walletResponse = await axiosInstance.get(
+          `/api/wallets/user/username/${username}`,
           {
             headers: {
               Authorization: `Bearer ${token}`
@@ -61,8 +62,8 @@ const MemberDashboard = () => {
         )
 
         // Fetch transactions
-        const transactionsResponse = await axios.get(
-          `http://localhost:8080/api/transactions/user/${username}`,
+        const transactionsResponse = await axiosInstance.get(
+          `/api/transactions/user/${username}`,
           {
             headers: {
               Authorization: `Bearer ${token}`
@@ -70,8 +71,8 @@ const MemberDashboard = () => {
           }
         )
 
-        const categoryResponse = await axios.get(
-          `http://localhost:8080/api/transactions/categorySpendingSummary/${username}`,
+        const categoryResponse = await axiosInstance.get(
+          `/api/transactions/categorySpendingSummary/${username}`,
           {
             headers: {
               Authorization: `Bearer ${token}`

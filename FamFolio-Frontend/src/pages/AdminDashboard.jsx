@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts"
 import { motion, AnimatePresence } from "framer-motion"
+import { axiosInstance } from "../App"
 
 // Mock data
 const mockStatistics = {

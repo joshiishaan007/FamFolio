@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { axiosInstance } from "../App";
 
 const CreditCardIcon = () => (
   <svg
@@ -90,7 +91,7 @@ const Register = () => {
         dateOfBirth: formData.dateOfBirth
       };
 
-      const response = await axios.post("http://localhost:8080/api/users/register", payload);
+      const response = await axiosInstance.post("/api/users/register", payload);
       
       // Store token and username in localStorage
      localStorage.setItem("jwt", response.data.token);
