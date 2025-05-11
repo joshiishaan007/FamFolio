@@ -48,7 +48,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     @Query("SELECT new map(t.category.name as category, SUM(t.amount) as totalAmount) " +
             "FROM Transaction t " +
-            "WHERE t.user.username = :username " +
+            "WHERE t.user.username = :username AND t.status = 'COMPLETED'" +
             "GROUP BY t.category.name")
     List<Map<String, Object>> getCategorySpendingSummary(@Param("username") String username);
 
