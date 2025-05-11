@@ -84,11 +84,9 @@ const Login = () => {
     "Content-Type": "application/json",
   }
 });
-      const data = await response.json();
+      const data =await response.data
 
-      if (!response.ok) {
-        throw new Error(data.message || "Login failed");
-      }
+   
 
       // Store user data in localStorage
       localStorage.setItem("username", data.user.username);

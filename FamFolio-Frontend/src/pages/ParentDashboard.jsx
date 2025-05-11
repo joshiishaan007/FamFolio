@@ -53,9 +53,7 @@ const fetchDashboardData = async () => {
   }
 });
 
-    if (!parentWalletResponse.ok) {
-      throw new Error("Failed to fetch parent wallet data");
-    }
+ 
 
     const parentWalletData = await parentWalletResponse.data;
 
@@ -67,9 +65,7 @@ const fetchDashboardData = async () => {
   }
 });
 
-    if (!memberWalletsResponse.ok) {
-      throw new Error("Failed to fetch member wallet data");
-    }
+  
 
     const memberWalletsData = await memberWalletsResponse.data;
 
