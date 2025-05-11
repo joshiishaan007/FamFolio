@@ -5,6 +5,8 @@ WORKDIR /app
 # Copy Maven wrapper and project files
 COPY .mvn/ .mvn
 COPY mvnw pom.xml ./
+# Make mvnw executable
+RUN chmod +x mvnw
 COPY src ./src
 
 # Package the application
