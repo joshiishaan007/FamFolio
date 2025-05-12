@@ -145,6 +145,13 @@ const ParentDashboard = () => {
   const [showFundsModal, setShowFundsModal] = useState(false);
   const [showAllTransactions, setShowAllTransactions] = useState(false);
   const [transactions, setTransactions] = useState([]);
+  const [showRulesModal, setShowRulesModal] = useState(false);
+  const [selectedMemberForRules, setSelectedMemberForRules] = useState(null);
+  const [memberRules, setMemberRules] = useState([]);
+  const [loadingRules, setLoadingRules] = useState(false);
+  const [currentWalletView, setCurrentWalletView] = useState(null);
+
+  const navigate = useNavigate()
 
   const loadDashboardData = async () => {
     try {
@@ -174,20 +181,52 @@ const ParentDashboard = () => {
         }
       );
 
-      // Filter only DEBIT transactions and format them
-      const debitTransactions = response.data
-        .filter((tx) => tx.transactionType === "DEBIT")
+      const responseTransactions = response.data
         .map((tx) => ({
           ...tx,
           icon: getTransactionIcon(tx.description),
           date: new Date(tx.createdAt).toLocaleDateString(),
-        }));
+        }))
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-      setTransactions(debitTransactions);
+      setTransactions(responseTransactions);
     } catch (error) {
       console.error("Error fetching transactions:", error);
     }
   };
+
+  const fetchMemberRules = async (memberUsername) => {
+
+    // console.log(dashboardData.wa)
+
+  try {
+    const username = localStorage.getItem("username");
+    const jwtToken = localStorage.getItem("jwt");
+
+    if (!username || !jwtToken) {
+      throw new Error("User not authenticated");
+    }
+
+    setLoadingRules(true);
+    
+    const response = await axiosInstance.get(
+      `/api/rules/member/${memberUsername}`,
+      {
+        headers: {
+          Authorization: `Bearer ${jwtToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    setMemberRules(response.data);
+    setLoadingRules(false);
+  } catch (error) {
+    console.error("Error fetching member rules:", error);
+    setLoadingRules(false);
+    setMemberRules([]);
+  }
+};
 
   const getTransactionIcon = (description) => {
     if (!description) return <DollarSign size={16} />;
@@ -215,6 +254,72 @@ const ParentDashboard = () => {
     loadDashboardData();
     fetchTransactions();
   }, []);
+
+const fetchWalletTransactions = async (walletUsername) => {
+  try {
+    const jwtToken = localStorage.getItem("jwt");
+    
+    const response = await axiosInstance.get(
+      `/api/transactions/users/${walletUsername}`,
+      {
+        headers: {
+          Authorization: `Bearer ${jwtToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    
+    // Filter and format transactions as needed
+    const walletTransactions = response.data.map(tx => ({
+      ...tx,
+      icon: getTransactionIcon(tx.description),
+      date: new Date(tx.createdAt).toLocaleDateString(),
+    }))
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    
+    setTransactions(walletTransactions);
+    setShowAllTransactions(false);
+  } catch (error) {
+    console.error("Error fetching wallet transactions:", error);
+  }
+};
+
+ 
+const toggleRuleStatus = async (ruleId, currentStatus) => {
+  try {
+    const jwtToken = localStorage.getItem("jwt");
+    const newStatus = !currentStatus;
+    
+    // Optimistically update the UI
+    setMemberRules(memberRules.map(rule => 
+      rule.id === ruleId ? { ...rule, active: newStatus } : rule
+    ));
+    
+    const response = await axiosInstance.patch(
+      `/api/rules/${ruleId}/status`,
+      { active: newStatus },
+      {
+        headers: {
+          Authorization: `Bearer ${jwtToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    
+    if (response.status !== 200) {
+      // Revert if API call fails
+      setMemberRules(memberRules.map(rule => 
+        rule.id === ruleId ? { ...rule, active: currentStatus } : rule
+      ));
+    }
+  } catch (error) {
+    console.error("Error toggling rule status:", error);
+    // Revert on error
+    setMemberRules(memberRules.map(rule => 
+      rule.id === ruleId ? { ...rule, active: currentStatus } : rule
+    ));
+  }
+};
 
   const handleAddFundsClick = (wallet) => {
     setSelectedWallet(wallet);
@@ -510,13 +615,17 @@ const ParentDashboard = () => {
                 <motion.div
                   whileHover={{ scale: 1.03 }}
                   className="flex flex-col rounded-lg border border-blue-200 bg-blue-50 p-4 transition-all"
+                  onClick={() => {
+                    fetchWalletTransactions(dashboardData.parentName);
+                    setCurrentWalletView(dashboardData.parentName);
+                  }}
                 >
                   <div className="mb-3 flex items-center gap-3">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-sm text-white">
                       {dashboardData.parentName.charAt(0)}
                     </div>
                     <h4 className="font-medium">
-                      {dashboardData.parentName}'s Wallet
+                      {dashboardData.parentName}
                     </h4>
                   </div>
 
@@ -544,6 +653,10 @@ const ParentDashboard = () => {
                   <motion.div
                     key={wallet.id}
                     whileHover={{ scale: 1.03 }}
+                    onClick={() => {
+                      fetchWalletTransactions(wallet.name);
+                      setCurrentWalletView(wallet.name);
+                    }}
                     className={`flex flex-col rounded-lg border p-4 transition-all ${
                       wallet.spent > wallet.limit
                         ? "border-red-200 bg-red-50"
@@ -613,18 +726,24 @@ const ParentDashboard = () => {
             </motion.div>
 
             {/* Recent Transactions */}
+            
             <motion.div
               variants={itemVariants}
               className="col-span-1 flex flex-col rounded-xl bg-white p-5 shadow-md"
             >
+              {currentWalletView && (
+              <h3 className="mb-2 text-lg font-medium">
+                Transactions for {currentWalletView}
+              </h3>
+            )}
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-lg font-bold text-gray-800">
                   Recent Transactions
                 </h3>
                 {transactions.length > 5 && (
-                  <button
-                    className="text-sm font-medium text-blue-700 hover:text-blue-800"
+                  <button 
                     onClick={() => setShowAllTransactions(true)}
+                    className="text-sm text-blue-600 hover:underline"
                   >
                     View All
                   </button>
@@ -638,13 +757,19 @@ const ParentDashboard = () => {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className="flex items-center gap-3 rounded-lg border border-gray-100 p-3 hover:bg-blue-50"
+                    className={`flex items-center gap-3 rounded-lg border p-3 hover:bg-blue-50 ${
+                      transaction.status === "FAILED" 
+                        ? "border-red-200 bg-red-50" 
+                        : "border-gray-100"
+                    }`}
                   >
                     <div
                       className={`flex h-10 w-10 items-center justify-center rounded-full ${
-                        transaction.amount < 0
+                        transaction.status === "FAILED"
                           ? "bg-red-100 text-red-600"
-                          : "bg-green-100 text-green-600"
+                          : transaction.amount < 0
+                            ? "bg-red-100 text-red-600"
+                            : "bg-green-100 text-green-600"
                       }`}
                     >
                       {getTransactionIcon(transaction.description)}
@@ -656,19 +781,33 @@ const ParentDashboard = () => {
                           transaction.description.substring(0, 20) +
                             (transaction.description.length > 20 ? "..." : "")}
                       </p>
-                      <p className="text-xs text-gray-500">
-                        {new Date(transaction.createdAt).toLocaleDateString()}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs text-gray-500">
+                          {new Date(transaction.createdAt).toLocaleDateString()}
+                        </p>
+                        {transaction.status === "FAILED" && (
+                          <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-600">
+                            Failed
+                          </span>
+                        )}
+                      </div>
+                      {transaction.status === "FAILED" && transaction.failureReason && (
+                        <p className="mt-1 text-xs text-red-500">
+                          {transaction.failureReason}
+                        </p>
+                      )}
                     </div>
 
                     <p
                       className={`font-medium ${
-                        transaction.amount < 0
+                        transaction.status === "FAILED"
                           ? "text-red-600"
-                          : "text-green-600"
+                          : transaction.amount < 0
+                            ? "text-red-600"
+                            : "text-green-600"
                       }`}
                     >
-                      ₹{Math.abs(transaction.amount).toFixed(2)}
+                      {transaction.amount < 0 ? "-" : "+"}₹{Math.abs(transaction.amount).toFixed(2)}
                     </p>
                   </motion.div>
                 ))}
@@ -811,9 +950,27 @@ const ParentDashboard = () => {
               
               <span>Top-up Wallet</span>
             </motion.button>
+
+            
+
             </Link>
+
+            <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowRulesModal(true)}
+                className="flex items-center gap-2 rounded-lg bg-purple-500 px-4 py-3 font-medium text-white shadow-lg shadow-purple-200 hover:bg-purple-600"
+              >
+              <Book size={18} />
+              <span>View Rules</span>
+            </motion.button>
           </motion.div>
+
+
+
         </motion.div>
+
+        
       </div>
 
       {/* Add Funds Modal */}
@@ -877,7 +1034,248 @@ const ParentDashboard = () => {
           </motion.div>
         </div>
       )}
-      
+
+      {/* Transaction History Modal */}
+      {showAllTransactions && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <motion.div
+            variants={modalVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-xl"
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-gray-800">
+                Transaction History
+                {currentWalletView && ` - ${currentWalletView}`}
+              </h3>
+              <button
+                onClick={() => setShowAllTransactions(false)}
+                className="rounded-full p-1 hover:bg-gray-100"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="max-h-[70vh] overflow-y-auto pr-2">
+              <div className="flex flex-col gap-3">
+                {transactions.map((transaction, index) => (
+                  <motion.div
+                    key={transaction.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: index * 0.05 }}
+                    className={`flex items-center gap-3 rounded-lg border p-3 ${
+                      transaction.status === "FAILED" 
+                        ? "border-red-200 bg-red-50" 
+                        : "border-gray-100 hover:bg-blue-50"
+                    }`}
+                  >
+                    <div
+                      className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                        transaction.status === "FAILED"
+                          ? "bg-red-100 text-red-600"
+                          : transaction.amount < 0
+                            ? "bg-red-100 text-red-600"
+                            : "bg-green-100 text-green-600"
+                      }`}
+                    >
+                      {getTransactionIcon(transaction.description)}
+                    </div>
+
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-800">
+                        {transaction.merchantName || transaction.description}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs text-gray-500">
+                          {new Date(transaction.createdAt).toLocaleString()}
+                        </p>
+                        {transaction.status === "FAILED" && (
+                          <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-600">
+                            Failed
+                          </span>
+                        )}
+                      </div>
+                      {transaction.status === "FAILED" && transaction.failureReason && (
+                        <p className="mt-1 text-xs text-red-500">
+                          {transaction.failureReason}
+                        </p>
+                      )}
+                    </div>
+
+                    <p
+                      className={`font-medium ${
+                        transaction.status === "FAILED"
+                          ? "text-red-600"
+                          : transaction.amount < 0
+                            ? "text-red-600"
+                            : "text-green-600"
+                      }`}
+                    >
+                      {transaction.amount < 0 ? "-" : "+"}₹{Math.abs(transaction.amount).toFixed(2)}
+                    </p>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Rules Modal */}
+      {showRulesModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <motion.div
+            variants={modalVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="w-full max-w-xl rounded-xl bg-white p-6 shadow-xl"
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-gray-800">Member Rules</h3>
+              <button 
+                onClick={() => {
+                  setShowRulesModal(false);
+                  setSelectedMemberForRules(null);
+                  setMemberRules([]);
+                }}
+                className="rounded-full p-1 hover:bg-gray-100"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            {!selectedMemberForRules ? (
+              <div className="flex flex-col gap-4">
+                <p className="text-sm text-gray-600">Select a member to view their rules:</p>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {dashboardData.wallets.map((wallet) => (
+                    <motion.button
+                      key={wallet.id}
+                      whileHover={{ scale: 1.03 }}
+                      onClick={() => {
+                        setSelectedMemberForRules(wallet);
+                        fetchMemberRules(wallet.name);
+                      }}
+                      className="flex items-center gap-3 rounded-lg border border-gray-200 p-4 text-left hover:border-blue-300 hover:bg-blue-50"
+                    >
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 text-sm text-white">
+                        {wallet.avatar}
+                      </div>
+                      <span className="font-medium">{wallet.name}</span>
+                      
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 text-sm text-white">
+                      {selectedMemberForRules.avatar}
+                    </div>
+                    <h4 className="text-lg font-medium">{selectedMemberForRules.name}'s Rules</h4>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSelectedMemberForRules(null);
+                      setMemberRules([]);
+                    }}
+                    className="rounded-lg border border-gray-200 px-3 py-1 text-sm text-gray-600 hover:bg-gray-50"
+                  >
+                    Choose Another
+                  </button>
+                </div>
+                
+                {loadingRules ? (
+                  <div className="flex justify-center py-10">
+                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-blue-400 border-t-blue-600"></div>
+                  </div>
+                ) : memberRules.length > 0 ? (
+                  <div className="flex max-h-96 flex-col gap-4 overflow-y-auto">
+                    {memberRules.map((rule) => (
+                      <motion.div
+                        key={rule.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
+                      >
+                        <div className="mb-3 flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className={`h-3 w-3 rounded-full ${rule.active ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                            <h5 className="font-semibold">{rule.ruleName}</h5>
+                          </div>
+                          <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+                            {rule.ruleType.replace(/_/g, ' ')}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-500">
+                              {rule.active ? "Active" : "Inactive"}
+                            </span>
+                            <button
+                              onClick={() => toggleRuleStatus(rule.id, rule.active)}
+                              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                                rule.active ? "bg-blue-600" : "bg-gray-200"
+                              }`}
+                            >
+                              <span
+                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                  rule.active ? "translate-x-6" : "translate-x-1"
+                                }`}
+                              />
+                            </button>
+                          </div>
+                        </div>
+                        
+                        
+                        <div className="mb-3">
+                          <p className="text-sm font-medium text-gray-700">Conditions:</p>
+                          <ul className="ml-4 mt-1 list-disc text-sm text-gray-600">
+                            {rule.conditions.map((condition) => (
+                              <li key={condition.id}>
+                                {condition.conditionType === "AMOUNT" ? "Amount" : condition.conditionType} {condition.operator} {condition.valueString}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        
+                        <div>
+                          <p className="text-sm font-medium text-gray-700">Actions:</p>
+                          <ul className="ml-4 mt-1 list-disc text-sm text-gray-600">
+                            {rule.actions.map((action) => (
+                              <li key={action.id}>
+                                {action.actionType === "BLOCK" ? "Block Transaction" : action.actionType}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-lg bg-gray-50 p-6 text-center">
+                    <p className="text-gray-600">No rules found for this member.</p>
+                    <button 
+                      className="mt-4 rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-600"
+                      onClick={() => {
+                        // Here you would navigate to create rule page or open create rule modal
+                        navigate("/rules")
+                      }}
+                    >
+                      Create New Rule
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </motion.div>
+        </div>
+      )}
     </div>
   )
 }

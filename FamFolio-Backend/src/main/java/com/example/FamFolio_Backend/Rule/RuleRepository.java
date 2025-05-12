@@ -19,6 +19,8 @@ public interface RuleRepository extends JpaRepository<Rule, Long> {
     @Query("SELECT r FROM Rule r WHERE r.owner.id = :ownerId AND (r.member.id IS NULL OR r.member.id = :memberId) AND r.isActive = true")
     List<Rule> findActiveRulesForMember(@Param("ownerId") Long ownerId, @Param("memberId") Long memberId);
 
+    List<Rule> findByMember_Username(String memberUsername);
+
     @Query("SELECT r FROM Rule r WHERE r.ruleType = :ruleType AND r.owner.id = :ownerId AND (r.member.id IS NULL OR r.member.id = :memberId) AND r.isActive = true")
     List<Rule> findActiveRulesByTypeForMember(@Param("ruleType") String ruleType, @Param("ownerId") Long ownerId, @Param("memberId") Long memberId);
 }

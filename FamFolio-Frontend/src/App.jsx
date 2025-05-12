@@ -23,6 +23,7 @@ import axios from 'axios'
 
 export const axiosInstance = axios.create({
   baseURL: 'https://famfolio-1.onrender.com',
+  // baseURL: 'http://localhost:8080'
 });
 
 const ProtectedRoute = ({ children, requiredRole = null }) => {

@@ -49,11 +49,11 @@ public class RuleController {
         return ResponseEntity.ok(rules);
     }
 
-    @GetMapping("/owner/{ownerId}/member/{memberId}")
+    @GetMapping("/member/{memberUsername}")     
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<List<RuleDTO>> getRulesForMember(
-            @PathVariable Long ownerId,
-            @PathVariable Long memberId) {
-        List<RuleDTO> rules = ruleService.getRulesForMember(ownerId, memberId);
+            @PathVariable String memberUsername) {
+        List<RuleDTO> rules = ruleService.getRulesForMember(memberUsername);
         return ResponseEntity.ok(rules);
     }
 
@@ -65,6 +65,15 @@ public class RuleController {
         } catch (RuleNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         }
+    }
+
+    @PatchMapping("/{ruleId}/status")
+    @PreAuthorize("hasRole('OWNER')")
+    public ResponseEntity<RuleDTO> setRuleStatus(@PathVariable Long ruleId){
+
+        RuleDTO rule = ruleService.updateRuleStatus(ruleId);
+
+        return ResponseEntity.ok(rule);
     }
 
     @PutMapping("/{ruleId}")

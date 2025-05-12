@@ -18,17 +18,20 @@ const RulesPage = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [familyMembers, setFamilyMembers] = useState([])
   const [username, setUsername] = useState(null)
+  const [categories, setCategories] = useState([])
 
   // Sample data for dropdowns
-  const ruleTypes = ["SPENDING_LIMIT", "TIME_RESTRICTION", "CATEGORY_BLOCK", "MANUAL_APPROVAL", "CUSTOM"]
-  const conditionTypes = ["AMOUNT", "CATEGORY", "TIME", "DAY", "DATE", "MERCHANT", "CUSTOM"]
-  const actionTypes = ["BLOCK", "NOTIFY", "REQUIRE_APPROVAL", "LIMIT_AMOUNT", "CUSTOM"]
+  const ruleTypes = ["SPENDING_LIMIT", "TIME_RESTRICTION", "CATEGORY_BLOCK", "MANUAL_APPROVAL"]
+  const conditionTypes = ["AMOUNT", "CATEGORY", "TIME", "DAY", "DATE", "MERCHANT"]
+  const actionTypes = ["BLOCK", "NOTIFY", "REQUIRE_APPROVAL", "LIMIT_AMOUNT"]
 
   // Days of week for day picker
   const daysOfWeek = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"]
 
   // Categories for category picker
-  const categories = ["Groceries", "Entertainment", "Education", "Shopping", "Travel", "Food", "Utilities"]
+  // const categories = ["Groceries", "Entertainment", "Education", "Shopping", "Travel", "Food", "Utilities"]
+
+  
 
   // Get auth token and username from localStorage
   const getAuthHeaders = () => {
@@ -44,6 +47,15 @@ const RulesPage = () => {
 
   // Fetch family members from API
   useEffect(() => {
+
+    axiosInstance.get(`/api/categories`)
+      .then(response => {
+        setCategories(response.data);
+      })
+      .catch(error => {
+        console.error('Error fetching categories:', error);
+      });
+
     const fetchFamilyMembers = async () => {
 
       const name = localStorage.getItem("username")
@@ -415,9 +427,9 @@ const RulesPage = () => {
       case "NOTIFY":
         return (
           <div className="space-y-4 mt-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Notify User</label>
-              <select
+            {/* <div> */}
+              {/* <label className="block text-sm font-medium text-gray-700 mb-1">Notify User</label> */}
+              {/* <select
                 className="form-select rounded-md border-gray-300 focus:border-blue-400 focus:ring focus:ring-blue-200 transition-all w-full"
                 value={config.notifyUser || ""}
                 onChange={(e) => updateAction(action.id, "config.notifyUser", e.target.value)}
@@ -428,9 +440,9 @@ const RulesPage = () => {
                     {member.name}
                   </option>
                 ))}
-              </select>
-            </div>
-            <div>
+              </select> */}
+            {/* </div> */}
+            {/* <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Notification Message</label>
               <textarea
                 className="form-textarea rounded-md border-gray-300 focus:border-blue-400 focus:ring focus:ring-blue-200 transition-all w-full"
@@ -439,14 +451,14 @@ const RulesPage = () => {
                 onChange={(e) => updateAction(action.id, "config.message", e.target.value)}
                 rows={3}
               />
-            </div>
+            </div> */}
           </div>
         )
 
       case "REQUIRE_APPROVAL":
         return (
           <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Approver</label>
+            {/* <label className="block text-sm font-medium text-gray-700 mb-1">Approver</label>
             <select
               className="form-select rounded-md border-gray-300 focus:border-blue-400 focus:ring focus:ring-blue-200 transition-all w-full"
               value={config.approver || ""}
@@ -458,7 +470,7 @@ const RulesPage = () => {
                   {member.name}
                 </option>
               ))}
-            </select>
+            </select> */}
           </div>
         )
 

@@ -135,6 +135,12 @@ public class RuleServiceImpl implements RuleService {
     }
 
     @Override
+    public List<RuleDTO> getRulesForMember(String memberUsername) {
+        List<Rule> rules = ruleRepository.findByMember_Username(memberUsername);
+        return rules.stream().map(this::convertToDTO).toList();
+    }
+
+    @Override
     @Transactional
     public RuleDTO updateRule(Long ruleId, RuleCreateRequest request) {
         // Validate the rule
@@ -196,6 +202,16 @@ public class RuleServiceImpl implements RuleService {
         Rule updatedRule = ruleRepository.save(rule);
 
         return convertToDTO(updatedRule);
+    }
+
+    @Override
+    public RuleDTO updateRuleStatus(Long ruleId) {
+        Rule rule = ruleRepository.findById(ruleId)
+                .orElseThrow(()->new RuleNotFoundException("Rule not found with Id:"+ruleId));
+
+        rule.setIsActive(!rule.getIsActive());
+
+        return convertToDTO(ruleRepository.save(rule));
     }
 
     @Override

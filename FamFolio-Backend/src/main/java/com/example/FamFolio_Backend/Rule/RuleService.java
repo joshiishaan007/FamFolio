@@ -23,4 +23,8 @@ public interface RuleService {
 
 
     void deleteRule(Long ruleId);
+
+    List<RuleDTO> getRulesForMember (String memberUsername);
+
+    RuleDTO updateRuleStatus(Long ruleId);
 }

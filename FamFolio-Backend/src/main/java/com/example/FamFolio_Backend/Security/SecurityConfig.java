@@ -41,9 +41,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/aadhaar/validateOtp","/api/aadhaar/verify","/api/categories").permitAll()
                         .requestMatchers("/api/ruleViolations/*","/api/transactions/categorySpendingSummary/*").permitAll()
-                        .requestMatchers("/api/rules","/api/transaction_approval/{username}","/api/relationships/family/{username}").hasRole("OWNER")
+                        .requestMatchers("/api/rules","/api/transaction_approval/{username}","/api/relationships/family/{username}","/api/rules/member/{memberUsername}").hasRole("OWNER")
                         .requestMatchers("/api/payments/external","/api/payments/transfer").hasAnyRole("OWNER","MEMBER")
                         .requestMatchers("/api/users/register/{ownerUsername}","/api/wallets/update-balance/{userId}").hasRole("OWNER")
+                        .requestMatchers("/api/rules/{ruleId}/status").hasRole("OWNER")
                         .requestMatchers("/api/users/register/**", "/api/users/login","/api/users/register/{regi}","/api/wallets/update-balance/{userId}").permitAll() // Allow public access to register and login
                         .requestMatchers("/api/**").authenticated() // Require authentication for all other /api/** endpoints
                         .anyRequest().authenticated() // Authenticate any other requests
